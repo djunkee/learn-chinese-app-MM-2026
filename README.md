@@ -21,3 +21,6 @@ Lesson order, vocabulary and grammar topics follow *New Concept Chinese 1* (less
 
 ## Feedback
 Notes written in the app (✎ on a question, or Settings → Feedback) are stored on the phone and sent as text through the phone's share sheet.
+
+## Blocks, topics and levels
+`BOOKS` in `data.js` holds the blocks shown on the home screen: the course book (`ncc1`, lessons 1–40) and special topics (`top`, numbers from 101). Each block has a `level` label; a level filter can be added later. Topic entries have the same shape as lessons, plus optional `icon`, `intro` (background paragraphs) and `maps`. Progress ids are built by `LID()` in `index.html` and must not change.
