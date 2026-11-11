@@ -75,6 +75,9 @@ audio{width:100%;margin:4px 0}
 #upd{position:fixed;left:0;right:0;top:0;z-index:15;background:var(--card);border-bottom:2px solid var(--gold);padding:12px 16px calc(12px);display:none;box-shadow:0 4px 14px rgba(0,0,0,.15)}
 #upd .in{max-width:640px;margin:0 auto}
 textarea{font:inherit;width:100%;min-height:84px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.stage{min-height:210px;display:flex;flex-direction:column;justify-content:center;text-align:center;padding:22px 14px}
+.stage .z{font-size:2.6rem;line-height:1.25}.stage .p{font-size:1.2rem;margin-top:6px}.stage .e{color:var(--mute);margin-top:6px}
+.ctl{display:flex;gap:8px;justify-content:center;margin:14px 0}.ctl button{min-width:64px;font-size:1.3rem}.ctl .big{min-width:96px;font-size:1.6rem}
 </style>
 </head>
 <body>
@@ -89,6 +92,7 @@ textarea{font:inherit;width:100%;min-height:84px;padding:10px;border-radius:10px
 const KEY='jiayou-progress';           // do not rename: progress lives under this key
 // Release history, newest first. The first entry is the running version; keep version.json in step.
 const RELEASES=[
+ {v:'1.2.0',d:'2026-11-12 01:15',n:['Lessons 1–20 added: the app now covers all 40 lessons of New Concept Chinese 1','New Listen tab: a spoken lesson for running, and a say-it-first speaking drill for walking, both hands-free','Listen tab can also play your own book recordings one after another','Daily reminder: add a repeating reminder to your phone calendar from Settings','Short lessons borrow words from the neighbouring lesson so sessions stay full length']},
  {v:'1.1.2',d:'2026-11-12 00:30',n:['Feedback: share notes through the phone\'s share menu or straight into WhatsApp, where you pick the contact','After saving a note on a question you can share it right away']},
  {v:'1.1.1',d:'2026-11-12 00:20',n:['Version number, release date and release notes are shown in Settings','Settings has an Advanced section']},
  {v:'1.1.0',d:'2026-11-12 00:15',n:['Tap any word in a sentence to see pinyin and meaning and hear it','New exercise: what does this sentence mean?','Audio plays automatically for shown words and sentences and for tapped answers','Feedback notes on every question and in Settings','Updates wait until you tap Update, with a backup reminder','Every motivational line has a Chinese phrase with pinyin and audio']},
@@ -173,7 +177,8 @@ function qRead(L,i,pool){const s=sent(L,i);const seen=new Set([s.e]),o=[];for(co
 function qCloze(L,i){const c=L.C[i];const z=c[0].split(' ');const p=c[1].split(' ').map(x=>x.replace(/_/g,' '));let k=0;const toks=z.map(t=>PUNCT.test(t)?{z:t,p:''}:(t==='___'?{blank:1,z:c[3],p:p[k++]}:{z:t,p:p[k++]}));const full=toks.map(t=>t.z).join('');return {type:'cloze',id:'c:'+BOOK.id+':'+L.n+':'+i,title:'Fill in the blank',toks,e:c[2],opts:shuffle([{z:c[3],ok:1},...c[4].map(z=>({z}))]).map(x=>({html:'<span class="h zh">'+esc(x.z)+'</span><span class="p pyopt">'+esc(DICT[x.z]||'')+'</span>',ok:x.ok,z:x.z})),say:full,full,cut:true,help:'Two wrong answers removed.'}}
 function makeSession(scope,size,mode){
   const Ls=scope==='all'?LESSONS:[lessonOf(scope)];
-  const words=ALLW.filter(w=>scope==='all'||w.n==scope);
+  let words=ALLW.filter(w=>scope==='all'||w.n==scope);
+  if(scope!=='all'&&words.length<8){const n=+scope,pair=n%2?n+1:n-1;words=words.concat(ALLW.filter(w=>w.n===pair))}
   const sents=[],clozes=[];Ls.forEach(L=>{L.S.forEach((_,i)=>sents.push([L,i]));L.C.forEach((_,i)=>clozes.push([L,i]))});
   let nW,nB,nC,nR;size=+size;
   if(mode==='grammar'){nW=0;nC=Math.ceil(size/2);nR=Math.floor(size/4);nB=size-nC-nR}else{nB=Math.round(size*.2);nC=Math.round(size*.2);nR=Math.max(1,Math.round(size*.15));nW=size-nB-nC-nR}
@@ -269,7 +274,7 @@ function vWho(){return '<div class="center" style="padding-top:24px"><img src="i
 function setName(n){if(!n)return;S.name=n;S.buddy=/^andrei$/i.test(n)?'Moritz':(/^moritz$/i.test(n)?'Andrei':'your training partner');save();render()}
 function vLesson(n){const L=lessonOf(n);if(!L)return vHome();
   let h='<button class="link" onclick="go(\'#/\')">← All lessons</button><div class="row" style="margin-top:6px"><span class="num">'+L.n+'</span><div><div class="zh" style="font-size:1.5rem;line-height:1.2">'+esc(L.zh)+'</div><div class="small">'+esc(L.py)+'</div><div class="small mute">'+esc(L.en)+'</div></div><span class="grow"></span>'+spk(L.zh)+'</div><p><span class="tag">'+esc(L.topic)+'</span></p>';
-  h+='<h2>Practise this lesson</h2>'+sessButtons(L.n)+'<div class="row" style="margin-top:8px"><button class="grow" onclick="flash('+L.n+')">Flashcards · '+L.W.length+' words · about '+Math.max(2,Math.round(L.W.length/5))+' min</button><button class="grow" onclick="start('+L.n+',8,\'grammar\')">Grammar drill · about 3 min</button></div>';
+  h+='<h2>Practise this lesson</h2>'+sessButtons(L.n)+'<div class="row" style="margin-top:8px"><button class="grow" onclick="flash('+L.n+')">Flashcards · '+L.W.length+' words · about '+Math.max(2,Math.round(L.W.length/5))+' min</button><button class="grow" onclick="start('+L.n+',8,\'grammar\')">Grammar drill · about 3 min</button></div><div class="row" style="margin-top:8px"><button class="grow" onclick="startA(\'lecture\','+L.n+')">🎧 Spoken lesson</button><button class="grow" onclick="startA(\'drill\','+L.n+')">🗣 Speaking drill</button></div>';
   h+='<h2>Words</h2><div class="card">'+L.W.map(w=>'<div class="word" onclick="speak(\''+w[0]+'\')"><span class="h zh">'+esc(w[0])+'</span><span class="grow"><b>'+esc(w[1])+'</b> <span class="tag">'+esc(w[2]||'phrase')+'</span><br><span class="mute">'+esc(w[3])+'</span></span>'+spk(w[0])+'</div>').join('')+'</div>';
   h+='<h2>Grammar</h2><div class="card">'+L.G.map(g=>gramHtml(L,g)).join('')+'</div>';
   h+='<h2>Practice sentences</h2><p class="mute small">Tap a sentence to hear it. Tap "English" to see the translation.</p><div class="card">'+L.S.map((_,i)=>sentRow(L,i)).join('')+'</div>';
@@ -293,6 +298,7 @@ function vProgress(){const t=dayNum(today());let tot={q:0,c:0,sec:0},bars='',lab
 function exportP(){S.lastBackup=today();save();const b=new Blob([JSON.stringify(S,null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='jiayou-backup-'+(S.name||'me').toLowerCase()+'-'+today()+'.json';document.body.appendChild(a);a.click();a.remove()}
 function importP(inp){const f=inp.files[0];if(!f)return;f.text().then(t=>{let o;try{o=JSON.parse(t)}catch(e){alert('This file is not a Jiāyóu backup.');return}if(!o||!o.items||!o.days){alert('This file is not a Jiāyóu backup.');return}if(!confirm('Replace the progress on this phone with the backup from '+(o.name||'unknown')+'?'))return;S=migrate(o);save();render()})}
 function vSettings(){let h='<h1>Settings</h1><div class="card"><label class="sw"><span>Name</span><input type="text" style="max-width:55%" value="'+esc(S.name)+'" onchange="setName(this.value.trim())"></label><label class="sw"><span>Show pinyin under characters<br><span class="small mute">Turn off later to train reading. Help always brings it back.</span></span><input type="checkbox" '+(S.settings.pinyin?'checked':'')+' onchange="S.settings.pinyin=this.checked;save()"></label><label class="sw"><span>Speak answers automatically</span><input type="checkbox" '+(S.settings.auto?'checked':'')+' onchange="S.settings.auto=this.checked;save()"></label><label class="sw"><span>Voice speed</span><select style="max-width:45%" onchange="S.settings.rate=+this.value;save();speak(\'你好\')">'+[[0.6,'Slow'],[0.8,'Normal for learners'],[1,'Natural']].map(o=>'<option value="'+o[0]+'" '+(S.settings.rate==o[0]?'selected':'')+'>'+o[1]+'</option>').join('')+'</select></label><button onclick="speak(\'我们一起学习汉语\')">Test the Chinese voice</button><p class="small mute" id="vinfo"></p></div>';
+  h+='<h2>Daily reminder</h2><div class="card"><p class="small">Adds a repeating reminder to your phone\'s calendar, with a link back to the app. It works offline and on both Android and iPhone. To change or stop it, edit the calendar entry.</p><label class="sw"><span>Remind me every day at</span><input type="time" id="rt" value="'+esc(S.settings.remind||'07:30')+'" style="font:inherit;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)" onchange="S.settings.remind=this.value;save()"></label><button onclick="makeReminder()">Add reminder to calendar</button></div>';
   h+='<h2>Feedback</h2><div class="card"><p class="small">Ideas, mistakes, wishes: write them here, or tap ✎ on any question. Notes stay on this phone until you share them.</p><textarea id="fbt" placeholder="What should be better?"></textarea><div class="row" style="margin-top:8px"><button class="grow" onclick="fbSave(\'general\')">Save note</button><button class="primary grow" '+(S.feedback.length?'':'disabled')+' onclick="fbSend()">Share '+S.feedback.length+' note'+(S.feedback.length===1?'':'s')+'</button></div><button style="width:100%;margin-top:8px" '+(S.feedback.length?'':'disabled')+' onclick="fbWhats()">Send via WhatsApp</button><p class="small mute">Share opens your phone\'s share menu (WhatsApp, mail, messages…). No phone number is stored in the app; you choose who gets it.</p>'+S.feedback.slice().reverse().map(f=>'<div class="word"><span class="grow small"><span class="mute">'+esc(f.d)+' · '+esc(f.ctx)+(f.sent?' · sent':'')+'</span><br>'+esc(f.text)+'</span></div>').join('')+(S.feedback.some(f=>f.sent)?'<button class="link small" onclick="fbClear()">Delete sent notes</button>':'')+'<textarea id="fbout" style="display:none;margin-top:8px" readonly></textarea></div>';
   h+='<h2>App version</h2><div class="card"><p>Version <b>'+APP_VERSION+'</b></p><p class="small">Released: '+APP_DATE+' (Singapore time)<br>Installed on this phone: '+esc(S.updatedAt||'unknown')+'</p><p class="small mute">The app works offline and only changes when you tap Update.</p><button onclick="checkUpdate(true)">Check for an update</button><p class="small mute" id="uinfo"></p></div>';
   h+='<h2>Book audio</h2><div class="card"><p class="small">If you own the recordings that come with the textbook (files named like <b>21-1.mp3</b>), you can load them into the app on this phone. They stay on this phone only and are shown on each lesson page.</p><button onclick="$(\'#aud\').click()">Choose audio files</button> <button class="ghost" onclick="clearAudio()">Remove them</button><input type="file" id="aud" accept="audio/*,.mp3" multiple style="display:none" onchange="importAudio(this)"><p class="small mute" id="ainfo"></p></div>';
@@ -302,10 +308,73 @@ async function importAudio(inp){const fs=[...inp.files];let n=0;for(const f of f
 async function clearAudio(){if(confirm('Remove the stored audio files from this phone?')){await idbClear('audio');render()}}
 function resetAll(){if(confirm('Really delete all progress on this phone?')&&confirm('This cannot be undone. Delete?')){S=blank();save();render()}}
 
+/* ---------- daily reminder as a calendar file ---------- */
+function makeReminder(){const t=($('#rt')&&$('#rt').value)||S.settings.remind||'07:30';S.settings.remind=t;save();const d=today().replace(/-/g,''),hm=t.replace(':','')+'00',url=location.origin+location.pathname;
+  const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Jiayou//Chinese practice//EN','BEGIN:VEVENT','UID:jiayou-daily-'+Date.now()+'@jiayou','DTSTAMP:'+d+'T000000Z','DTSTART:'+d+'T'+hm,'DURATION:PT5M','RRULE:FREQ=DAILY','SUMMARY:加油 Jiāyóu: 2 minutes of Chinese','DESCRIPTION:Open the app: '+url,'URL:'+url,'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:加油 Jiāyóu: 2 minutes of Chinese','TRIGGER:PT0M','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));a.download='jiayou-daily-reminder.ics';document.body.appendChild(a);a.click();a.remove()}
+
+/* ---------- hands-free audio: spoken lesson and speaking drill ---------- */
+let A=null,enVoice=null,wake=null;
+function pickEn(){if(!('speechSynthesis' in window))return;const v=speechSynthesis.getVoices();enVoice=v.find(x=>/en[-_]GB/i.test(x.lang))||v.find(x=>/^en/i.test(x.lang))||null}
+const PYMARK=/\([^)]*[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ][^)]*\)/g;
+function mixed(text,card){const out=[];text.replace(PYMARK,'').replace(/[·→]/g,', ').split(/([\u4e00-\u9fff]+)/).forEach(part=>{if(!part.trim())return;if(/[\u4e00-\u9fff]/.test(part))out.push({say:part,lang:'zh',card});else part.split(/(?<=[.!?:])\s+/).forEach(x=>{x=x.replace(/^[\s,.;:]+/,'').trim();if(x.length>1)out.push({say:x,lang:'en',card})})});return out}
+function wordSteps(w,drill){const full={z:w.z,p:w.p,e:w.e},gap=1200+w.z.length*900;
+  return drill?[{head:1,say:w.e,lang:'en',card:{e:w.e,hint:'Say it in Chinese…'}},{pause:gap+800,card:{e:w.e,hint:'Say it in Chinese…'}},{say:w.z,lang:'zh',card:full},{pause:gap,card:full},{say:w.z,lang:'zh',slow:1,card:full},{pause:900,card:full}]
+   :[{head:1,say:w.z,lang:'zh',card:full},{pause:500,card:full},{say:w.e,lang:'en',card:full},{pause:400,card:full},{say:w.z,lang:'zh',slow:1,card:full},{pause:gap,card:Object.assign({hint:'Repeat it aloud'},full)},{say:w.z,lang:'zh',card:full},{pause:900,card:full}]}
+function sentSteps(L,i,drill){const s=sent(L,i),full={z:s.text,p:s.py,e:s.e},gap=1500+s.text.length*650;
+  return drill?[{head:1,say:s.e,lang:'en',card:{e:s.e,hint:'Say it in Chinese…'}},{pause:gap+1200,card:{e:s.e,hint:'Say it in Chinese…'}},{say:s.text,lang:'zh',card:full},{pause:gap,card:Object.assign({hint:'Repeat it aloud'},full)},{say:s.text,lang:'zh',slow:1,card:full},{pause:1000,card:full}]
+   :[{head:1,say:s.text,lang:'zh',card:full},{pause:500,card:full},{say:s.e,lang:'en',card:full},{pause:400,card:full},{say:s.text,lang:'zh',slow:1,card:full},{pause:gap,card:Object.assign({hint:'Repeat it aloud'},full)},{say:s.text,lang:'zh',card:full},{pause:1000,card:full}]}
+function buildA(mode,n){const L=lessonOf(n),st=[],t={z:L.zh,p:L.py,e:'Lesson '+L.n+' · '+L.en};
+  st.push({head:1,say:'Lesson '+L.n+'.',lang:'en',card:t},{say:L.zh,lang:'zh',card:t},{say:L.en+'.',lang:'en',card:t},{pause:600,card:t});
+  if(mode==='lecture'){
+    st.push({head:1,say:'New words.',lang:'en',card:{e:'New words',hint:'Listen, then repeat'}});
+    L.W.forEach(w=>st.push(...wordSteps({z:w[0],p:w[1],e:w[3]},false)));
+    L.G.forEach(g=>{const c={e:g.t,hint:g.x};const m=mixed('Grammar. '+g.t+'. '+g.x,c);if(m.length)m[0].head=1;st.push(...m,{pause:500,card:c});g.ex.forEach(i=>st.push(...sentSteps(L,i,false)))});
+    const used=new Set([].concat(...L.G.map(g=>g.ex)));const rest=L.S.map((_,i)=>i).filter(i=>!used.has(i));
+    if(rest.length){st.push({head:1,say:'More sentences.',lang:'en',card:{e:'More sentences'}});rest.forEach(i=>st.push(...sentSteps(L,i,false)))}
+  }else{
+    st.push({head:1,say:'Speaking drill. You hear the English. Say it in Chinese before the answer comes.',lang:'en',card:{e:'Speaking drill',hint:'You hear the English. Say it in Chinese before the answer comes.'}});
+    const ws=shuffle(L.W.map(w=>({z:w[0],p:w[1],e:w[3]})).filter(w=>!/^\(/.test(w.e)));
+    const ss=shuffle(L.S.map((_,i)=>i));
+    ws.forEach((w,k)=>{st.push(...wordSteps(w,true));if(k%3===2&&ss.length)st.push(...sentSteps(L,ss.pop(),true))});
+    ss.forEach(i=>st.push(...sentSteps(L,i,true)));
+  }
+  st.push({head:1,say:'End of lesson '+L.n+'.',lang:'en',card:{e:'End of lesson '+L.n,z:'很好',p:'hěn hǎo'}},{pause:1200,card:t});
+  return st}
+function estA(mode,n){let ms=0;buildA(mode,n).forEach(s=>{ms+=s.pause?s.pause:(s.lang==='zh'?(900+s.say.length*(s.slow?520:330)):(700+s.say.length*75))});return Math.max(1,Math.round(ms/60000))}
+async function startA(mode,n){if(!('speechSynthesis' in window)){alert('This phone has no speech voice available in the browser.');return}pickEn();pickVoice();
+  A={mode,n:+n,steps:buildA(mode,+n),i:0,run:0,paused:false,t0:Date.now(),items:0,cont:S.settings.cont!==false,back:location.hash};
+  try{if(navigator.wakeLock)wake=await navigator.wakeLock.request('screen')}catch(e){}
+  location.hash='#/play';render();runA()}
+function sayP(st,my){return new Promise(res=>{let done=false;const fin=()=>{if(!done){done=true;res()}};try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(st.lang==='zh'?st.say.replace(/[\s_]/g,''):st.say);if(st.lang==='zh'){u.lang='zh-CN';if(voice)u.voice=voice;u.rate=st.slow?0.55:(S.settings.rate||0.8)}else{u.lang=enVoice?enVoice.lang:'en-GB';if(enVoice)u.voice=enVoice;u.rate=0.95}u.onend=fin;u.onerror=fin;speechSynthesis.speak(u)}catch(e){fin()}setTimeout(fin,st.lang==='zh'?(3500+st.say.length*(st.slow?900:600)):(3500+st.say.length*130))})}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+async function runA(){const my=++A.run;while(A&&A.run===my&&A.i<A.steps.length){const st=A.steps[A.i];if(st.head)A.items++;drawA();if(st.pause)await sleep(st.pause);else await sayP(st,my);if(!A||A.run!==my)return;A.i++}
+  if(!A||A.run!==my)return;const nx=lessonOf(A.n+1);if(A.cont&&nx){A.n++;A.steps=buildA(A.mode,A.n);A.i=0;runA()}else stopA()}
+function pauseA(){if(!A)return;if(A.paused){A.paused=false;runA()}else{A.paused=true;A.run++;try{speechSynthesis.cancel()}catch(e){}drawA()}}
+function jumpA(dir){if(!A)return;A.run++;try{speechSynthesis.cancel()}catch(e){}let i=A.i;if(dir>0){i++;while(i<A.steps.length&&!A.steps[i].head)i++;if(i>=A.steps.length)i=A.steps.length-1}else{let seen=0;while(i>0){if(A.steps[i].head&&++seen===2)break;i--}}A.i=i;A.paused=false;runA()}
+function stopA(silent){if(!A)return;const sec=Math.round((Date.now()-A.t0)/1000),it=A.items,b=A.back;A.run++;try{speechSynthesis.cancel()}catch(e){}try{if(wake){wake.release();wake=null}}catch(e){}A=null;if(it>3)logDay(it,it,Math.min(sec,it*40));if(!silent){location.hash=b&&b!=='#/play'?b:'#/listen';render()}}
+function drawA(force){if(!A)return;const m=$('#main');if(!$('#stage')||force){m.innerHTML='<div class="row"><button class="ghost" onclick="stopA()">✕</button><div class="grow small mute" id="ainfo2"></div></div><div class="card stage" id="stage"></div><div class="ctl"><button onclick="jumpA(-1)" aria-label="Back">⏮</button><button class="primary big" id="pp" onclick="pauseA()"></button><button onclick="jumpA(1)" aria-label="Skip">⏭</button></div><label class="sw small"><span>Carry on with the next lesson automatically</span><input type="checkbox" '+(A.cont?'checked':'')+' onchange="A.cont=this.checked;S.settings.cont=this.checked;save()"></label><p class="small mute">Keep this screen on while you listen: the phone\'s voice stops when the screen locks. The app holds the screen awake for you where the phone allows it.</p>'}
+  const st=A.steps[Math.min(A.i,A.steps.length-1)],c=st.card||{};
+  $('#ainfo2').textContent=(A.mode==='lecture'?'Spoken lesson':'Speaking drill')+' · Lesson '+A.n+' · '+Math.round(A.i/A.steps.length*100)+'%';
+  $('#stage').innerHTML=(c.z?'<div class="z zh">'+esc(c.z)+'</div>':'')+(c.p?'<div class="p">'+esc(c.p)+'</div>':'')+(c.e?'<div class="e" style="'+(c.z?'':'font-size:1.3rem;color:var(--ink)')+'">'+esc(c.e)+'</div>':'')+(c.hint?'<div class="small mute" style="margin-top:12px">'+esc(c.hint)+'</div>':'');
+  $('#pp').textContent=A.paused?'▶':'⏸'}
+document.addEventListener('visibilitychange',async()=>{if(A&&!document.hidden&&navigator.wakeLock){try{wake=await navigator.wakeLock.request('screen')}catch(e){}}});
+/* book recordings as a playlist */
+let PL=null;
+async function playBook(n){const keys=(await idbKeys('audio')).map(String).filter(k=>/^\d{2}-/.test(k)&&+k.slice(0,2)>=+n).sort();const el=$('#plbox');if(!el)return;if(!keys.length){el.innerHTML='<p class="small mute">No book recordings for this lesson on this phone. Load your files under Settings → Book audio.</p>';return}
+  PL={keys,i:0};el.innerHTML='<p class="small" id="pltxt"></p><audio id="plau" controls></audio><p class="small mute">Recordings keep playing with the screen locked and move on to the next track by themselves.</p>';const au=$('#plau');au.onended=()=>{PL.i++;if(PL.i<PL.keys.length)plLoad(true)};plLoad(true)}
+async function plLoad(go){const au=$('#plau');if(!au||!PL)return;const b=await idbGet('audio',PL.keys[PL.i]);au.src=URL.createObjectURL(b);$('#pltxt').textContent='Track '+PL.keys[PL.i]+' ('+(PL.i+1)+' of '+PL.keys.length+')';if(go)au.play().catch(()=>{})}
+function vListen(){const n=S.settings.ln||LESSONS[0].n;const opts=LESSONS.map(L=>'<option value="'+L.n+'" '+(L.n==n?'selected':'')+'>Lesson '+L.n+' · '+esc(L.en)+'</option>').join('');
+  return '<h1>Listen</h1><p class="mute small">Hands-free practice for when your eyes and hands are busy.</p><div class="card"><label class="small mute">Start with</label><select id="ln" onchange="S.settings.ln=+this.value;save();render()">'+opts+'</select></div>'
+  +'<div class="card"><h3>🎧 Spoken lesson <span class="tag">for running</span></h3><p class="small">Just listen. Each word and sentence is said in Chinese, then English, then slowly with a pause to repeat. Grammar is explained in English with examples.</p><button class="primary" style="width:100%" onclick="startA(\'lecture\','+n+')">Play lesson '+n+' · about '+estA('lecture',n)+' min</button></div>'
+  +'<div class="card"><h3>🗣 Speaking drill <span class="tag">for walking</span></h3><p class="small">You hear the English, say the Chinese aloud in the pause, then hear the answer twice. No tapping needed.</p><button class="primary" style="width:100%" onclick="startA(\'drill\','+n+')">Start drill for lesson '+n+' · about '+estA('drill',n)+' min</button></div>'
+  +'<div class="card"><h3>📀 Book recordings</h3><p class="small">Plays your own textbook audio from lesson '+n+' onwards, one track after another.</p><button style="width:100%" onclick="playBook('+n+')">Play recordings from lesson '+n+'</button><div id="plbox" style="margin-top:8px"></div></div>'
+  +'<p class="small mute">Both spoken modes carry on with the next lesson by themselves, so one tap can cover a whole run. They use the phone\'s own voices, so the screen has to stay on.</p>'}
+
 /* ---------- updates: nothing changes until the user taps Update ---------- */
 let NEWV=null,updHidden=false;
 async function checkUpdate(manual){const info=$('#uinfo');try{const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;const v=await r.json();if(v.version&&v.version!==APP_VERSION){NEWV=v;updHidden=false;showUpd();if(info)info.textContent='Version '+v.version+' is available.'}else if(manual&&info)info.textContent='You have the latest version.'}catch(e){if(manual&&info)info.textContent='Could not check. You seem to be offline.'}}
-function showUpd(){const el=$('#upd');if(!el)return;if(!NEWV||updHidden||R||F){el.style.display='none';return}const bk=S.lastBackup===today();
+function showUpd(){const el=$('#upd');if(!el)return;if(!NEWV||updHidden||R||F||A){el.style.display='none';return}const bk=S.lastBackup===today();
   el.innerHTML='<div class="in"><b>Update available: version '+esc(NEWV.version)+'</b><p class="small" style="margin:4px 0">'+esc(NEWV.notes||'')+'</p><p class="small mute" style="margin:4px 0 8px">Your progress stays on this phone. Save a backup file first, just in case.</p><div class="row wrap"><button class="grow" onclick="exportP();showUpd()">'+(bk?'✓ Backup saved':'1 · Save backup')+'</button><button class="primary grow" onclick="doUpdate()">2 · Update now</button><button class="ghost" onclick="updHidden=true;showUpd()">Later</button></div></div>';el.style.display='block'}
 async function doUpdate(){if(S.lastBackup!==today()&&!confirm('Update without saving a backup first?'))return;const el=$('#upd');if(el)el.innerHTML='<div class="in">Updating…</div>';
   try{const reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration();const sw=reg&&reg.active;if(sw){await new Promise(res=>{const ch=new MessageChannel();ch.port1.onmessage=res;sw.postMessage({type:'update'},[ch.port2]);setTimeout(res,15000)})}}catch(e){}
@@ -314,24 +383,25 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkUpdat
 
 /* ---------- router ---------- */
 function go(h){location.hash=h}
-const TABS=[['#/','家','Home'],['#/vocab','词','Words'],['#/grammar','文','Grammar'],['#/progress','进','Progress'],['#/settings','设','Settings']];
+const TABS=[['#/','家','Home'],['#/listen','听','Listen'],['#/vocab','词','Words'],['#/grammar','文','Grammar'],['#/progress','进','Progress'],['#/settings','设','Settings']];
 function render(){const h=location.hash||'#/';const m=$('#main');
   if(h==='#/run'&&R){$('#nav').style.display='none';showUpd();showQ();return}
+  if(h==='#/play'&&A){$('#nav').style.display='none';showUpd();drawA(true);return}
   if(h==='#/flash'&&F){$('#nav').style.display='none';showUpd();showF();return}
   if(h==='#/done')return;
   $('#nav').style.display=S.name?'flex':'none';
   let v;const lm=h.match(/^#\/lesson\/(\d+)/);
-  if(lm)v=vLesson(+lm[1]);else if(h==='#/vocab')v=vVocab();else if(h==='#/grammar')v=vGrammar();else if(h==='#/progress')v=vProgress();else if(h==='#/settings')v=vSettings();else v=vHome();
+  if(lm)v=vLesson(+lm[1]);else if(h==='#/listen')v=vListen();else if(h==='#/vocab')v=vVocab();else if(h==='#/grammar')v=vGrammar();else if(h==='#/progress')v=vProgress();else if(h==='#/settings')v=vSettings();else v=vHome();
   m.innerHTML=v;const cur=lm?'#/':(TABS.find(t=>t[0]===h)?h:'#/');
   showUpd();$('#nav').innerHTML=TABS.map(t=>'<a href="'+t[0]+'" class="'+(t[0]===cur?'on':'')+'"><b class="zh">'+t[1]+'</b>'+t[2]+'</a>').join('');window.scrollTo(0,0)}
-window.addEventListener('hashchange',()=>{if((location.hash==='#/run'&&R)||(location.hash==='#/flash'&&F))return;if(location.hash!=='#/run')R=null;if(location.hash!=='#/flash'&&location.hash!=='#/done')F=null;render()});
+window.addEventListener('hashchange',()=>{if((location.hash==='#/run'&&R)||(location.hash==='#/flash'&&F)||(location.hash==='#/play'&&A))return;if(location.hash!=='#/play'&&A)stopA(true);if(location.hash!=='#/run')R=null;if(location.hash!=='#/flash'&&location.hash!=='#/done')F=null;render()});
 
 /* ---------- start ---------- */
 load();
 if(S.lastVersion!==APP_VERSION){S.lastVersion=APP_VERSION;const n=new Date();S.updatedAt=today()+' '+String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');save()}
 (async()=>{ // if the main copy is missing but the second copy exists, restore it
   if(!localStorage.getItem(KEY)){const b=await idbGet('kv','progress');if(b){try{S=migrate(JSON.parse(b));save()}catch(e){}}}
-  if(location.hash==='#/run'||location.hash==='#/flash'||location.hash==='#/done')location.hash='#/';
+  if(location.hash==='#/run'||location.hash==='#/flash'||location.hash==='#/done'||location.hash==='#/play')location.hash='#/';
   render();checkUpdate();
 })();
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){try{navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}}
