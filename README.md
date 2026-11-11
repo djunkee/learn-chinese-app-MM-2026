@@ -16,7 +16,7 @@ Progress is stored in the browser under the key `jiayou-progress` (plus a second
 Lesson order, vocabulary and grammar topics follow *New Concept Chinese 1* (lessons 21–40). Explanations and practice sentences are written for this app. The textbook's own texts and recordings are not part of this repository; users can load their own copy of the audio files on their phone under Settings.
 
 ## Releasing an update
-1. Change the app, then raise `APP_VERSION` in `index.html` and the same number plus a short note in `version.json`.
+1. Change the app, then add a new first entry to `RELEASES` in `index.html` (version, date and time, notes) and put the same version and a short note in `version.json`.
 2. Do not edit `sw.js`. Installed phones keep running their cached copy; they see "Update available", are offered a backup, and only switch when the user taps Update.
 
 ## Feedback
