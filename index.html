@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jiāyóu · Chinese practice</title>
+<meta name="theme-color" content="#b93a2b">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Jiāyóu">
+<style>
+:root{--bg:#f6f1e7;--card:#fffdf8;--ink:#23201c;--mute:#756d62;--line:#e4dccd;--red:#b93a2b;--red2:#8f2a1f;--soft:#f3e2da;--ok:#2f7d4f;--okbg:#e2f1e7;--bad:#b3261e;--badbg:#f8e1de;--gold:#b98a2b}
+@media (prefers-color-scheme:dark){:root{--bg:#191614;--card:#24201d;--ink:#f1ebe0;--mute:#a79d8f;--line:#3a332d;--red:#e0604f;--red2:#f08a7a;--soft:#3a2622;--ok:#6cc091;--okbg:#1e3327;--bad:#f08a7a;--badbg:#3d211e;--gold:#e0b458}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+body{padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+.zh{font-family:"Noto Serif SC","Songti SC","Source Han Serif SC","PingFang SC","Noto Sans CJK SC","Microsoft YaHei",serif}
+#main{max-width:640px;margin:0 auto;padding:16px 16px 24px}
+h1{font-size:1.45rem;margin:0 0 4px}h2{font-size:1.1rem;margin:22px 0 8px}h3{font-size:1rem;margin:0 0 4px}
+p{margin:6px 0}.mute{color:var(--mute)}.small{font-size:.86rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0}
+.row{display:flex;gap:10px;align-items:center}.wrap{flex-wrap:wrap}.grow{flex:1}.center{text-align:center}
+button{font:inherit;color:inherit;cursor:pointer;border-radius:12px;border:1px solid var(--line);background:var(--card);padding:10px 14px;min-height:44px}
+button.primary{background:var(--red);border-color:var(--red);color:#fff;font-weight:600}
+button.ghost{background:transparent}
+button.link{border:0;background:none;color:var(--red);padding:4px 0;min-height:0;text-decoration:underline}
+button:disabled{opacity:.45}
+.hero{display:flex;gap:12px;align-items:center;margin-bottom:6px}
+.hero img{width:52px;height:52px;border-radius:13px}
+.cheer{border-left:4px solid var(--gold);background:var(--card);padding:10px 12px;border-radius:8px;margin:12px 0;font-size:.95rem}
+.sess{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sess button{display:flex;flex-direction:column;align-items:center;padding:12px 4px}
+.sess b{font-size:1.02rem}.sess span{font-size:.78rem;color:var(--mute)}
+.sess button.primary span{color:#fde}
+.lessons{display:grid;grid-template-columns:1fr;gap:8px}
+.lesson{display:flex;gap:12px;align-items:center;text-align:left;width:100%}
+.num{flex:none;width:42px;height:42px;border-radius:10px;background:var(--soft);color:var(--red2);display:grid;place-items:center;font-weight:700}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;background:var(--ok)}
+.tok{display:inline-flex;flex-direction:column;align-items:center;margin:2px 3px;vertical-align:bottom}
+.tok .p{font-size:.78rem;color:var(--mute);min-height:1.1em}.tok .h{font-size:1.5rem;line-height:1.25}
+.big .tok .h{font-size:2.3rem}.big .tok .p{font-size:1rem}
+.nopy .tok .p{visibility:hidden}
+.word{display:flex;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.word:first-child{border-top:0}.word .h{font-size:1.5rem;min-width:3.2em}
+.spk{flex:none;width:44px;height:44px;border-radius:50%;padding:0;font-size:1.1rem}
+.opts{display:grid;gap:8px;margin-top:14px}
+.opts button{text-align:left;font-size:1.05rem;padding:12px 14px}
+.opts button.ok{background:var(--okbg);border-color:var(--ok)}
+.opts button.bad{background:var(--badbg);border-color:var(--bad)}
+.opts button.gone{display:none}
+.opts .h{font-size:1.4rem}.opts .p{color:var(--mute);font-size:.9rem;margin-left:8px}
+.tiles{display:flex;flex-wrap:wrap;gap:8px;min-height:64px;padding:8px;border:1px dashed var(--line);border-radius:12px;margin:10px 0;align-items:flex-end}
+.tiles button{padding:4px 10px}
+.blank{display:inline-block;min-width:2.6em;border-bottom:2px solid var(--red);height:1.9rem}
+.fb{border-radius:12px;padding:12px;margin-top:14px}.fb.ok{background:var(--okbg)}.fb.bad{background:var(--badbg)}
+.prog{height:6px;background:var(--line);border-radius:3px;margin:4px 0 16px}.prog i{display:block;height:100%;background:var(--red);border-radius:3px}
+.tag{display:inline-block;font-size:.75rem;padding:2px 8px;border-radius:999px;background:var(--soft);color:var(--red2)}
+.pat{font-family:ui-monospace,Menlo,monospace;font-size:.86rem;background:var(--soft);border-radius:8px;padding:8px 10px;margin:8px 0;overflow-wrap:anywhere}
+details{border-top:1px solid var(--line);padding:10px 0}details:first-of-type{border-top:0}summary{cursor:pointer;font-weight:600}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:5}
+nav a{flex:1;max-width:128px;text-align:center;padding:9px 2px 8px;color:var(--mute);text-decoration:none;font-size:.74rem}
+nav a b{display:block;font-size:1.25rem;font-weight:400;line-height:1.2}
+nav a.on{color:var(--red)}
+.days{display:flex;gap:4px;align-items:flex-end;height:70px}.days div{flex:1;background:var(--red);border-radius:3px 3px 0 0;min-height:2px;opacity:.85}.days div.z{background:var(--line)}
+.daylab{display:flex;gap:4px;font-size:.62rem;color:var(--mute)}.daylab span{flex:1;text-align:center}
+input[type=text],select{font:inherit;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);width:100%}
+label.sw{display:flex;justify-content:space-between;align-items:center;padding:8px 0;gap:12px}
+audio{width:100%;margin:4px 0}
+.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}.stat b{display:block;font-size:1.5rem}
+</style>
+</head>
+<body>
+<div id="main"></div>
+<nav id="nav"></nav>
+<script src="data.js"></script>
+<script>
+'use strict';
+/* ---------- storage: one fixed key, versioned schema, never reset on update ---------- */
+const KEY='jiayou-progress';           // do not rename: progress lives under this key
+const SCHEMA=1;                        // raise when the shape changes, and add a step in migrate()
+function blank(){return {schema:SCHEMA,name:'',buddy:'',settings:{pinyin:true,rate:0.8,auto:true},items:{},days:{},created:today()}}
+function migrate(s){
+  if(!s||typeof s!=='object')return blank();
+  if(!s.schema)s.schema=1;
+  // future steps go here, e.g.  if(s.schema<2){ ...convert...; s.schema=2 }
+  const b=blank();
+  for(const k in b)if(s[k]===undefined)s[k]=b[k];
+  for(const k in b.settings)if(s.settings[k]===undefined)s.settings[k]=b.settings[k];
+  return s;
+}
+let S;
+function load(){try{S=migrate(JSON.parse(localStorage.getItem(KEY)))}catch(e){S=blank()}}
+let saveT;
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}clearTimeout(saveT);saveT=setTimeout(()=>idbSet('kv','progress',JSON.stringify(S)),400)}
+/* IndexedDB: second copy of progress + the user's own audio files */
+let dbp;
+function db(){return dbp||(dbp=new Promise((res,rej)=>{try{const r=indexedDB.open('jiayou',1);r.onupgradeneeded=()=>{r.result.createObjectStore('kv');r.result.createObjectStore('audio')};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}catch(e){rej(e)}}))}
+function idbSet(st,k,v){return db().then(d=>new Promise(res=>{const t=d.transaction(st,'readwrite');t.objectStore(st).put(v,k);t.oncomplete=res;t.onerror=res})).catch(()=>{})}
+function idbGet(st,k){return db().then(d=>new Promise(res=>{const r=d.transaction(st).objectStore(st).get(k);r.onsuccess=()=>res(r.result);r.onerror=()=>res(null)})).catch(()=>null)}
+function idbKeys(st){return db().then(d=>new Promise(res=>{const r=d.transaction(st).objectStore(st).getAllKeys();r.onsuccess=()=>res(r.result);r.onerror=()=>res([])})).catch(()=>[])}
+function idbClear(st){return db().then(d=>new Promise(res=>{const t=d.transaction(st,'readwrite');t.objectStore(st).clear();t.oncomplete=res})).catch(()=>{})}
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function dayNum(s){return Math.round(Date.parse(s+'T00:00:00Z')/864e5)}
+function dayStr(n){return new Date(n*864e5).toISOString().slice(0,10)}
+const rnd=n=>Math.floor(Math.random()*n);
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
+const PUNCT=/^[，。？！]$/;
+const BOOK=BOOKS[0], LESSONS=BOOK.lessons, DICT=Object.assign({},EXTRA_PY);
+const ALLW=[];
+LESSONS.forEach(L=>L.W.forEach((w,i)=>{DICT[w[0]]=w[1];ALLW.push({id:'w:'+BOOK.id+':'+L.n+':'+w[0],n:L.n,z:w[0],p:w[1],pos:w[2],e:w[3]})}));
+const lessonOf=n=>LESSONS.find(l=>l.n==n);
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+function sent(L,i){const s=L.S[i];const z=s[0].split(' ');const p=s[1].split(' ').map(x=>x.replace(/_/g,' '));let k=0;const toks=z.map(t=>PUNCT.test(t)?{z:t,p:''}:{z:t,p:p[k++]});return {id:'s:'+BOOK.id+':'+L.n+':'+i,toks,e:s[2],text:z.join(''),py:cap(p.join(' '))}}
+function toksHtml(toks,cls){return '<span class="'+(cls||'')+'">'+toks.map(t=>t.blank?'<span class="tok"><span class="p">?</span><span class="blank"></span></span>':'<span class="tok"><span class="p">'+esc(t.p||'')+'</span><span class="h zh">'+esc(t.z)+'</span></span>').join('')+'</span>'}
+function wordHtml(z,p,big){return '<span class="'+(big?'big':'')+'"><span class="tok"><span class="p">'+esc(p)+'</span><span class="h zh">'+esc(z)+'</span></span></span>'}
+
+/* ---------- audio: phone voice ---------- */
+let voice=null;
+function pickVoice(){if(!('speechSynthesis' in window))return;const v=speechSynthesis.getVoices();voice=v.find(x=>/zh[-_]CN/i.test(x.lang))||v.find(x=>/^zh/i.test(x.lang))||null}
+if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
+function speak(text,slow){if(!('speechSynthesis' in window))return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text.replace(/[\s_]/g,''));u.lang='zh-CN';if(voice)u.voice=voice;u.rate=slow?0.55:(S.settings.rate||0.8);speechSynthesis.speak(u)}catch(e){}}
+const spk=(t,extra)=>'<button class="spk" aria-label="Listen" onclick="event.stopPropagation();speak(\''+t.replace(/'/g,'')+'\')">🔊</button>'+(extra?'<button class="spk" aria-label="Listen slowly" onclick="event.stopPropagation();speak(\''+t.replace(/'/g,'')+'\',1)">🐢</button>':'');
+
+/* ---------- spaced repetition ---------- */
+const GAP=[0,1,2,4,8,16];
+function item(id){return S.items[id]||(S.items[id]={b:0,d:0,r:0,w:0})}
+function grade(id,ok,helped){const it=item(id),t=dayNum(today());if(ok&&!helped){it.b=Math.min(5,it.b+1);it.r++}else if(!ok){it.b=Math.max(0,it.b-1);it.w++}it.d=t+(ok?GAP[it.b]:0);it.s=1}
+function weight(id){const it=S.items[id],t=dayNum(today());if(!it||!it.s)return 3;if(it.d<=t)return 5-Math.min(it.b,4)+1;return 0.4}
+function pickWeighted(list,n,idf){const pool=list.map(x=>({x,k:Math.pow(Math.random(),1/weight(idf(x)))}));pool.sort((a,b)=>b.k-a.k);return pool.slice(0,n).map(o=>o.x)}
+function mastery(L){let s=0;L.W.forEach(w=>{const it=S.items['w:'+BOOK.id+':'+L.n+':'+w[0]];s+=it?it.b:0});return s/(L.W.length*5)}
+function logDay(q,c,sec){const d=S.days[today()]||(S.days[today()]={q:0,c:0,sec:0,n:0});d.q+=q;d.c+=c;d.sec+=sec;d.n++;save()}
+function streak(){let t=dayNum(today()),n=0;if(!S.days[dayStr(t)])t--;while(S.days[dayStr(t)]&&S.days[dayStr(t)].q>0){n++;t--}return n}
+
+/* ---------- question builders ---------- */
+const TONE={a:'āáǎà',e:'ēéěè',i:'īíǐì',o:'ōóǒò',u:'ūúǔù',ü:'ǖǘǚǜ'};
+function toneVariants(py){const idx=[];for(let i=0;i<py.length;i++)for(const b in TONE)if(TONE[b].includes(py[i]))idx.push([i,b]);if(!idx.length)return null;const out=new Set();let guard=0;while(out.size<3&&guard++<60){const [i,b]=idx[rnd(idx.length)];const c=TONE[b][rnd(4)];if(c===py[i])continue;out.add(py.slice(0,i)+c+py.slice(i+1))}return out.size===3?[...out]:null}
+function others(w,n,scope){const pool=shuffle((scope.length>=8?scope:ALLW).filter(x=>x.z!==w.z&&x.e!==w.e));const seen=new Set(),out=[];for(const x of pool){if(seen.has(x.z))continue;seen.add(x.z);out.push(x);if(out.length===n)break}return out}
+function qWord(w,type,scope){
+  const o=others(w,3,scope);
+  if(type==='tone'){const v=toneVariants(w.p);if(!v)type='h2e';else return {type,id:w.id,title:'Which pinyin is right?',show:'<div class="center nopy">'+wordHtml(w.z,w.p,1)+'</div><p class="center mute">'+esc(w.e)+'</p>',opts:shuffle([{t:w.p,ok:1},...v.map(t=>({t}))]).map(x=>({html:'<span class="h">'+esc(x.t)+'</span>',ok:x.ok})),say:w.z,rev:w,help:'Listen to the word, then choose.',helpSay:true}}
+  if(type==='listen')return {type,id:w.id,title:'Listen. What does it mean?',show:'<div class="center">'+spk(w.z,1)+'</div>',auto:w.z,opts:shuffle([w,...o]).map(x=>({html:esc(x.e),ok:x===w})),say:w.z,rev:w,help:'<span class="zh" style="font-size:1.6rem">'+esc(w.z)+'</span> '+esc(w.p)};
+  if(type==='e2h')return {type,id:w.id,title:'Choose the Chinese word',show:'<p class="center" style="font-size:1.3rem;margin:18px 0"><b>'+esc(w.e)+'</b></p>',opts:shuffle([w,...o]).map(x=>({html:'<span class="h zh">'+esc(x.z)+'</span><span class="p pyopt">'+esc(x.p)+'</span>',ok:x===w})),say:w.z,rev:w,help:'It sounds like: '+esc(w.p),cut:true};
+  return {type:'h2e',id:w.id,title:'What does it mean?',show:'<div class="center">'+wordHtml(w.z,w.p,1)+'</div><div class="center">'+spk(w.z)+'</div>',opts:shuffle([w,...o]).map(x=>({html:esc(x.e),ok:x===w})),say:w.z,rev:w,cut:true,help:'Two wrong answers removed.'};
+}
+function qBuild(L,i){const s=sent(L,i);const toks=s.toks.filter(t=>!PUNCT.test(t.z));if(toks.length<3)return null;return {type:'build',id:s.id,title:'Build the sentence',s,toks,order:(()=>{let o;do{o=shuffle(toks.map((_,k)=>k))}while(o.every((v,k)=>v===k));return o})(),picked:[],say:s.text}}
+function qCloze(L,i){const c=L.C[i];const z=c[0].split(' ');const p=c[1].split(' ').map(x=>x.replace(/_/g,' '));let k=0;const toks=z.map(t=>PUNCT.test(t)?{z:t,p:''}:(t==='___'?{blank:1,z:c[3],p:p[k++]}:{z:t,p:p[k++]}));const full=toks.map(t=>t.z).join('');return {type:'cloze',id:'c:'+BOOK.id+':'+L.n+':'+i,title:'Fill in the blank',toks,e:c[2],opts:shuffle([{z:c[3],ok:1},...c[4].map(z=>({z}))]).map(x=>({html:'<span class="h zh">'+esc(x.z)+'</span><span class="p pyopt">'+esc(DICT[x.z]||'')+'</span>',ok:x.ok})),say:full,full,cut:true,help:'Two wrong answers removed.'}}
+function makeSession(scope,size,mode){
+  const Ls=scope==='all'?LESSONS:[lessonOf(scope)];
+  const words=ALLW.filter(w=>scope==='all'||w.n==scope);
+  const sents=[],clozes=[];Ls.forEach(L=>{L.S.forEach((_,i)=>sents.push([L,i]));L.C.forEach((_,i)=>clozes.push([L,i]))});
+  let nW,nB,nC;
+  if(mode==='grammar'){nW=0;nC=Math.ceil(size/2);nB=size-nC}else{nB=Math.round(size*.2);nC=Math.round(size*.2);nW=size-nB-nC}
+  const qs=[];
+  const types=['h2e','e2h','listen','tone','h2e','e2h','listen','e2h'];
+  pickWeighted(words,Math.min(nW,words.length),w=>w.id).forEach((w,i)=>qs.push(qWord(w,types[i%types.length],words)));
+  pickWeighted(clozes,Math.min(nC,clozes.length),x=>'c:'+BOOK.id+':'+x[0].n+':'+x[1]).forEach(x=>qs.push(qCloze(x[0],x[1])));
+  pickWeighted(sents,Math.min(nB+3,sents.length),x=>'s:'+BOOK.id+':'+x[0].n+':'+x[1]).map(x=>qBuild(x[0],x[1])).filter(Boolean).slice(0,nB).forEach(q=>qs.push(q));
+  return shuffle(qs);
+}
+
+/* ---------- session runtime ---------- */
+let R=null;
+const SIZES={quick:{n:8,label:'Quick',time:'about 2 min'},std:{n:16,label:'Standard',time:'about 5 min'},deep:{n:32,label:'Deep',time:'10–12 min'}};
+function start(scope,size,mode){const qs=makeSession(scope,SIZES[size]?SIZES[size].n:size,mode);if(!qs.length)return;R={qs,i:0,right:0,t0:Date.now(),scope,size,mode,back:location.hash};if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();location.hash='#/run';render()}
+function showQ(){
+  const q=R.qs[R.i];q.done=false;q.helped=q.helped||false;
+  let h='<div class="row"><button class="ghost" onclick="quit()">✕</button><div class="grow small mute">Question '+(R.i+1)+' of '+R.qs.length+'</div><button class="ghost" id="helpbtn" onclick="help()">💡 Help</button></div><div class="prog"><i style="width:'+(R.i/R.qs.length*100)+'%"></i></div><h3>'+q.title+'</h3>';
+  const py=S.settings.pinyin?'':' nopy';
+  if(q.type==='build'){h+='<p style="font-size:1.15rem;margin:14px 0"><b>'+esc(q.s.e)+'</b></p><div class="tiles'+py+'" id="ans"></div><div class="tiles'+py+'" id="bank"></div><button class="primary" style="width:100%" id="check" onclick="checkBuild()">Check</button>'}
+  else if(q.type==='cloze'){h+='<div class="card center'+py+'" id="qshow">'+toksHtml(q.toks)+'</div><p class="center"><b>'+esc(q.e)+'</b></p><div class="opts'+py+'" id="opts"></div>'}
+  else{h+='<div id="qshow" class="'+(q.type==='h2e'&&!S.settings.pinyin?'nopy':'')+'">'+q.show+'</div><div class="opts'+(q.type==='e2h'&&!S.settings.pinyin?' hidepy':'')+'" id="opts"></div>'}
+  h+='<div id="helpbox" class="cheer" style="display:none"></div><div id="fb"></div>';
+  $('#main').innerHTML=h;
+  if(q.opts)$('#opts').innerHTML=q.opts.map((o,k)=>'<button onclick="pick('+k+')">'+o.html+'</button>').join('');
+  if(!S.settings.pinyin)document.querySelectorAll('.pyopt').forEach(e=>e.style.display='none');
+  if(q.type==='build')drawTiles();
+  if(q.auto&&S.settings.auto)setTimeout(()=>speak(q.auto),250);
+  window.scrollTo(0,0);
+}
+function drawTiles(){const q=R.qs[R.i];const t=k=>'<span class="tok"><span class="p">'+esc(q.toks[k].p)+'</span><span class="h zh">'+esc(q.toks[k].z)+'</span></span>';
+  $('#ans').innerHTML=q.picked.map((k,i)=>'<button onclick="unpick('+i+')">'+t(k)+'</button>').join('')||'<span class="mute small">Tap the words in the right order</span>';
+  $('#bank').innerHTML=q.order.filter(k=>!q.picked.includes(k)).map(k=>'<button onclick="pickTile('+k+')">'+t(k)+'</button>').join('')}
+function pickTile(k){const q=R.qs[R.i];if(q.done)return;q.picked.push(k);speak(q.toks[k].z);drawTiles()}
+function unpick(i){const q=R.qs[R.i];if(q.done)return;q.picked.splice(i,1);drawTiles()}
+function checkBuild(){const q=R.qs[R.i];if(q.done)return;if(q.picked.length<q.toks.length){$('#fb').innerHTML='<p class="mute small">Use all the words first.</p>';return}
+  const ok=q.picked.map(k=>q.toks[k].z).join('')===q.toks.map(t=>t.z).join('');finish(ok)}
+function help(){const q=R.qs[R.i];if(q.done)return;q.helped=true;const hb=$('#helpbox');hb.style.display='block';
+  if(q.type==='build'){const next=q.toks.findIndex((t,k)=>q.picked[k]===undefined||q.toks[q.picked[k]].z!==t.z);q.picked=q.picked.slice(0,next);const k=q.order.find(k=>!q.picked.includes(k)&&q.toks[k].z===q.toks[next].z);if(k!==undefined)q.picked.push(k);drawTiles();document.querySelectorAll('.nopy').forEach(e=>e.classList.remove('nopy'));hb.innerHTML='Next word placed for you. Pinyin is shown.';return}
+  document.querySelectorAll('.nopy').forEach(e=>e.classList.remove('nopy'));document.querySelectorAll('.pyopt').forEach(e=>e.style.display='');
+  if(q.cut){const bs=[...document.querySelectorAll('#opts button')];const wrong=shuffle(q.opts.map((o,k)=>o.ok?-1:k).filter(k=>k>=0)).slice(0,2);wrong.forEach(k=>bs[k].classList.add('gone'))}
+  hb.innerHTML=q.help||'Pinyin is shown.';if(q.helpSay)speak(q.say)}
+function pick(k){const q=R.qs[R.i];if(q.done)return;const bs=[...document.querySelectorAll('#opts button')];bs.forEach((b,i)=>{b.disabled=true;if(q.opts[i].ok)b.classList.add('ok')});if(!q.opts[k].ok)bs[k].classList.add('bad');finish(!!q.opts[k].ok)}
+function finish(ok){const q=R.qs[R.i];q.done=true;grade(q.id,ok,q.helped);save();if(ok)R.right++;
+  document.querySelectorAll('.nopy').forEach(e=>e.classList.remove('nopy'));document.querySelectorAll('.pyopt').forEach(e=>e.style.display='');
+  const hb=$('#helpbtn');if(hb)hb.disabled=true;const cb=$('#check');if(cb)cb.style.display='none';
+  let sol='';
+  if(q.type==='build')sol=toksHtml(q.s.toks)+'<p>'+esc(q.s.py)+'</p><p class="mute">'+esc(q.s.e)+'</p>';
+  else if(q.type==='cloze')sol=toksHtml(q.toks.map(t=>({z:t.z,p:t.p})))+'<p class="mute">'+esc(q.e)+'</p>';
+  else sol=wordHtml(q.rev.z,q.rev.p)+' <span style="margin-left:8px">'+esc(q.rev.e)+'</span>';
+  $('#fb').innerHTML='<div class="fb '+(ok?'ok':'bad')+'"><b>'+(ok?(q.helped?'Right, with help':'Right! 对 duì'):'Not quite')+'</b><div style="margin:6px 0">'+sol+'</div><div class="row">'+spk(q.say,1)+'<button class="primary grow" onclick="next()">'+(R.i+1<R.qs.length?'Next':'Finish')+'</button></div></div>';
+  if(S.settings.auto)speak(q.say);
+  $('#fb').scrollIntoView({behavior:'smooth',block:'nearest'})}
+function next(){R.i++;if(R.i<R.qs.length)showQ();else endRun()}
+function quit(){if(R&&R.i>0&&!R.ended){const sec=Math.min(Math.round((Date.now()-R.t0)/1000),R.i*60);logDay(R.i,R.right,sec)}const b=R?R.back:'#/';R=null;location.hash=b||'#/';render()}
+function endRun(){const sec=Math.min(Math.round((Date.now()-R.t0)/1000),R.qs.length*60);logDay(R.qs.length,R.right,sec);R.ended=true;const pct=Math.round(R.right/R.qs.length*100);const r=R;
+  $('#main').innerHTML='<div class="center" style="padding-top:30px"><div class="zh" style="font-size:3.2rem;color:var(--red)">'+(pct>=80?'很好':'加油')+'</div><p class="mute">'+(pct>=80?'hěn hǎo · very good':'jiāyóu · keep going')+'</p><h1>'+r.right+' of '+r.qs.length+' right</h1><p class="mute">'+Math.floor(sec/60)+' min '+(sec%60)+' s · streak '+streak()+' day'+(streak()===1?'':'s')+'</p></div><div class="cheer">'+cheer()+'</div><div class="row"><button class="grow" onclick="start(\''+r.scope+'\',\''+r.size+'\',\''+(r.mode||'')+'\')">Again</button><button class="primary grow" onclick="quit()">Done</button></div>';
+  window.scrollTo(0,0)}
+function cheer(){const me=S.name||'You',bud=S.buddy||(/andrei/i.test(me)?'Moritz':'Andrei');const d=dayNum(today())+(R?R.i:0)+Object.keys(S.days).length;return esc(CHEERS[d%CHEERS.length].replace(/\{me\}/g,me).replace(/\{buddy\}/g,bud))}
+
+/* ---------- flashcards ---------- */
+let F=null;
+function flash(scope){const words=ALLW.filter(w=>scope==='all'||scope==='weak'||w.n==scope);let list=scope==='weak'?words.filter(w=>{const it=S.items[w.id];return it&&it.w>0&&it.b<3}):words;if(!list.length){alert('No weak words yet. Practise first, the words you miss will collect here.');return}
+  list=scope==='all'||scope==='weak'?pickWeighted(list,Math.min(15,list.length),w=>w.id):shuffle(list);F={list,i:0,ok:0,t0:Date.now(),back:location.hash};location.hash='#/flash';render()}
+function showF(){const w=F.list[F.i];$('#main').innerHTML='<div class="row"><button class="ghost" onclick="endF(1)">✕</button><div class="grow small mute">Card '+(F.i+1)+' of '+F.list.length+' · Lesson '+w.n+'</div></div><div class="prog"><i style="width:'+(F.i/F.list.length*100)+'%"></i></div><div class="card center" style="padding:34px 14px"><div class="zh" style="font-size:3.4rem;line-height:1.2">'+esc(w.z)+'</div><div id="back" style="visibility:hidden"><p style="font-size:1.3rem;margin:10px 0 2px">'+esc(w.p)+'</p><p><span class="tag">'+esc(w.pos||'phrase')+'</span> '+esc(w.e)+'</p></div><div style="margin-top:10px">'+spk(w.z,1)+'</div></div><div id="fbtn"><button class="primary" style="width:100%" onclick="revealF()">Show pinyin and meaning</button></div>';if(S.settings.auto)speak(w.z)}
+function revealF(){$('#back').style.visibility='visible';$('#fbtn').innerHTML='<div class="row"><button class="grow" onclick="rateF(0)">Again</button><button class="primary grow" onclick="rateF(1)">Got it</button></div>'}
+function rateF(ok){grade(F.list[F.i].id,!!ok,false);save();if(ok)F.ok++;F.i++;if(F.i<F.list.length)showF();else endF()}
+function endF(q){if(F.i>0)logDay(F.i,F.ok,Math.min(Math.round((Date.now()-F.t0)/1000),F.i*30));const b=F.back;const done=!q;const f=F;F=null;if(done){$('#main').innerHTML='<div class="center" style="padding-top:30px"><div class="zh" style="font-size:3rem;color:var(--red)">好</div><h1>'+f.ok+' of '+f.list.length+' known</h1></div><div class="cheer">'+cheer()+'</div><button class="primary" style="width:100%" onclick="location.hash=\''+(b||'#/vocab')+'\';render()">Done</button>';location.hash='#/done'}else{location.hash=b||'#/vocab';render()}}
+
+/* ---------- views ---------- */
+function sessButtons(scope){return '<div class="sess">'+Object.keys(SIZES).map((k,i)=>'<button class="'+(i===0?'primary':'')+'" onclick="start(\''+scope+'\',\''+k+'\')"><b>'+SIZES[k].label+'</b><span>'+SIZES[k].time+'</span><span>'+SIZES[k].n+' questions</span></button>').join('')+'</div>'}
+function vHome(){
+  if(!S.name)return vWho();
+  const d=S.days[today()],st=streak();
+  let h='<div class="hero"><img src="icon.svg" alt=""><div><h1>你好, '+esc(S.name)+'</h1><div class="mute small">'+(d?('Today: '+d.q+' questions, '+Math.max(1,Math.round(d.sec/60))+' min'):'Nothing practised yet today')+' · streak '+st+' day'+(st===1?'':'s')+'</div></div></div>';
+  h+='<div class="cheer">'+cheer()+'</div>';
+  h+='<h2>Today\'s mixed practice</h2><p class="mute small">All lessons together. Words you find hard come up more often. Pick how long you have:</p>'+sessButtons('all');
+  h+='<h2>'+esc(BOOK.title)+' <span class="zh mute" style="font-weight:400">'+esc(BOOK.zh)+'</span></h2><p class="mute small">'+esc(BOOK.note)+'</p><div class="lessons">';
+  LESSONS.forEach(L=>{const m=Math.round(mastery(L)*100);h+='<button class="lesson" onclick="go(\'#/lesson/'+L.n+'\')"><span class="num">'+L.n+'</span><span class="grow"><span class="zh" style="font-size:1.1rem">'+esc(L.zh)+'</span><br><span class="small mute">'+esc(L.en)+'</span><span class="bar"><i style="width:'+m+'%"></i></span></span></button>'});
+  h+='</div><p class="mute small" style="margin-top:16px">More books and material can be added as further blocks here later.</p>';
+  return h}
+function vWho(){return '<div class="center" style="padding-top:24px"><img src="icon.svg" alt="" style="width:96px;height:96px;border-radius:24px"><h1 style="margin-top:14px">Jiāyóu <span class="zh">加油</span></h1><p class="mute">"Add oil": what you shout at a runner at kilometre 35.<br>Chinese practice for Moritz and Andrei.</p><h2>Who is practising on this phone?</h2><div class="row"><button class="primary grow" onclick="setName(\'Moritz\')">Moritz</button><button class="primary grow" onclick="setName(\'Andrei\')">Andrei</button></div><p class="mute small">Or type another name:</p><div class="row"><input type="text" id="nm" placeholder="Name"><button onclick="setName($(\'#nm\').value.trim())">OK</button></div><p class="mute small" style="margin-top:18px">Progress is stored on this phone only. Add the app to your home screen so the phone keeps it.</p></div>'}
+function setName(n){if(!n)return;S.name=n;S.buddy=/^andrei$/i.test(n)?'Moritz':(/^moritz$/i.test(n)?'Andrei':'your training partner');save();render()}
+function vLesson(n){const L=lessonOf(n);if(!L)return vHome();
+  let h='<button class="link" onclick="go(\'#/\')">← All lessons</button><div class="row" style="margin-top:6px"><span class="num">'+L.n+'</span><div><div class="zh" style="font-size:1.5rem;line-height:1.2">'+esc(L.zh)+'</div><div class="small">'+esc(L.py)+'</div><div class="small mute">'+esc(L.en)+'</div></div><span class="grow"></span>'+spk(L.zh)+'</div><p><span class="tag">'+esc(L.topic)+'</span></p>';
+  h+='<h2>Practise this lesson</h2>'+sessButtons(L.n)+'<div class="row" style="margin-top:8px"><button class="grow" onclick="flash('+L.n+')">Flashcards · '+L.W.length+' words · about '+Math.max(2,Math.round(L.W.length/5))+' min</button><button class="grow" onclick="start('+L.n+',8,\'grammar\')">Grammar drill · about 3 min</button></div>';
+  h+='<h2>Words</h2><div class="card">'+L.W.map(w=>'<div class="word" onclick="speak(\''+w[0]+'\')"><span class="h zh">'+esc(w[0])+'</span><span class="grow"><b>'+esc(w[1])+'</b> <span class="tag">'+esc(w[2]||'phrase')+'</span><br><span class="mute">'+esc(w[3])+'</span></span>'+spk(w[0])+'</div>').join('')+'</div>';
+  h+='<h2>Grammar</h2><div class="card">'+L.G.map(g=>gramHtml(L,g)).join('')+'</div>';
+  h+='<h2>Practice sentences</h2><p class="mute small">Tap a sentence to hear it. Tap "English" to see the translation.</p><div class="card">'+L.S.map((_,i)=>sentRow(L,i)).join('')+'</div>';
+  h+='<h2>Book audio</h2><div id="tracks" class="card mute small">Looking for your audio files…</div>';
+  setTimeout(()=>tracks(L.n),0);return h}
+function sentRow(L,i){const s=sent(L,i);return '<div class="word" onclick="speak(\''+s.text+'\')"><span class="grow">'+toksHtml(s.toks)+'<div><button class="link small" onclick="event.stopPropagation();this.outerHTML=\'<span class=&quot;mute&quot;>'+esc(s.e).replace(/'/g,'&#39;')+'</span>\'">English</button></div></span>'+spk(s.text,1)+'</div>'}
+function gramHtml(L,g){return '<details><summary>'+esc(g.t)+'</summary><p>'+esc(g.x)+'</p><div class="pat zh">'+esc(g.pat)+'</div>'+g.ex.map(i=>sentRow(L,i)).join('')+'</details>'}
+async function tracks(n){const el=$('#tracks');if(!el)return;const keys=(await idbKeys('audio')).filter(k=>String(k).startsWith(String(n).padStart(2,'0')+'-')).sort();if(!keys.length){el.innerHTML='No book recordings on this phone yet. If you own the audio files, load them once under Settings → Book audio. Until then every word and sentence is spoken by the phone\'s Chinese voice.';return}
+  el.classList.remove('mute');el.innerHTML='';for(const k of keys){const b=await idbGet('audio',k);const d=document.createElement('div');d.innerHTML='<div class="small">Track '+esc(k)+'</div>';const a=document.createElement('audio');a.controls=true;a.preload='none';a.src=URL.createObjectURL(b);d.appendChild(a);el.appendChild(d)}}
+function vVocab(){let h='<h1>Vocabulary</h1><p class="mute small">Flashcards: look at the word, say it, then check. '+ALLW.length+' words in '+LESSONS.length+' lessons.</p><div class="row wrap"><button class="primary grow" onclick="flash(\'all\')">Mixed cards · 15 cards · about 3 min</button><button class="grow" onclick="flash(\'weak\')">My weak words</button></div><h2>Find a word</h2><input type="text" id="q" placeholder="Search English, pinyin or characters" oninput="filterW(this.value)"><div id="wl"></div>';setTimeout(()=>filterW(''),0);return h}
+const plain=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+function filterW(q){q=plain(q.trim());const el=$('#wl');if(!el)return;let h='';LESSONS.forEach(L=>{const ws=ALLW.filter(w=>w.n===L.n&&(!q||plain(w.e).includes(q)||plain(w.p).replace(/ /g,'').includes(q.replace(/ /g,''))||w.z.includes(q)));if(!ws.length)return;h+='<details '+(q?'open':'')+'><summary>Lesson '+L.n+' · <span class="zh">'+esc(L.zh)+'</span> <span class="mute small">('+ws.length+')</span></summary><div class="row" style="margin:8px 0"><button class="grow" onclick="flash('+L.n+')">Flashcards for lesson '+L.n+'</button></div>'+ws.map(w=>{const it=S.items[w.id];return '<div class="word" onclick="speak(\''+w.z+'\')"><span class="h zh">'+esc(w.z)+'</span><span class="grow"><b>'+esc(w.p)+'</b><br><span class="mute">'+esc(w.e)+'</span></span><span class="small mute">'+(it&&it.s?'●'.repeat(it.b)+'○'.repeat(5-it.b):'new')+'</span></div>'}).join('')+'</details>'});el.innerHTML='<div class="card">'+(h||'<span class="mute">No word found.</span>')+'</div>'}
+function vGrammar(){let h='<h1>Grammar</h1><p class="mute small">Every pattern from the book, lesson by lesson, with a short drill.</p>';LESSONS.forEach(L=>{h+='<div class="card"><div class="row"><span class="num">'+L.n+'</span><div class="grow"><span class="zh">'+esc(L.zh)+'</span><br><span class="small mute">'+esc(L.en)+'</span></div></div>'+L.G.map(g=>gramHtml(L,g)).join('')+'<button style="width:100%;margin-top:8px" onclick="start('+L.n+',8,\'grammar\')">Drill lesson '+L.n+' grammar · 8 questions · about 3 min</button></div>'});return h}
+function vProgress(){const t=dayNum(today());let tot={q:0,c:0,sec:0},bars='',labs='',mx=1;const arr=[];for(let i=13;i>=0;i--){const d=S.days[dayStr(t-i)];arr.push([t-i,d?d.sec:0]);if(d)mx=Math.max(mx,d.sec)}for(const k in S.days){tot.q+=S.days[k].q;tot.c+=S.days[k].c;tot.sec+=S.days[k].sec}
+  arr.forEach(a=>{bars+='<div class="'+(a[1]?'':'z')+'" style="height:'+Math.max(3,a[1]/mx*100)+'%" title="'+dayStr(a[0])+'"></div>';labs+='<span>'+dayStr(a[0]).slice(8)+'</span>'});
+  const known=ALLW.filter(w=>S.items[w.id]&&S.items[w.id].b>=3).length;
+  let h='<h1>Progress</h1><div class="card stat"><div><b>'+streak()+'</b><span class="small mute">day streak</span></div><div><b>'+Math.round(tot.sec/60)+'</b><span class="small mute">minutes in total</span></div><div><b>'+known+'</b><span class="small mute">of '+ALLW.length+' words solid</span></div></div><h2>Minutes per day, last 14 days</h2><div class="card"><div class="days">'+bars+'</div><div class="daylab">'+labs+'</div></div><h2>Daily log</h2><div class="card">';
+  const ks=Object.keys(S.days).sort().reverse().slice(0,30);h+=ks.length?ks.map(k=>{const d=S.days[k];return '<div class="word"><span class="grow">'+k+'</span><span class="small mute">'+d.q+' questions · '+(d.q?Math.round(d.c/d.q*100):0)+'% right · '+Math.max(1,Math.round(d.sec/60))+' min</span></div>'}).join(''):'<span class="mute">Your practice days will be listed here.</span>';
+  h+='</div><h2>Lessons</h2><div class="card">'+LESSONS.map(L=>{const m=Math.round(mastery(L)*100);return '<div class="word" onclick="go(\'#/lesson/'+L.n+'\')"><span class="num">'+L.n+'</span><span class="grow"><span class="zh">'+esc(L.zh)+'</span><span class="bar"><i style="width:'+m+'%"></i></span></span><span class="small mute">'+m+'%</span></div>'}).join('')+'</div>';
+  h+='<h2>Backup</h2><div class="card"><p class="small mute">Progress lives on this phone. Save a backup file before you change phones, and load it on the new one.</p><div class="row"><button class="grow" onclick="exportP()">Save backup file</button><button class="grow" onclick="$(\'#imp\').click()">Load backup file</button></div><input type="file" id="imp" accept="application/json,.json" style="display:none" onchange="importP(this)"></div>';return h}
+function exportP(){const b=new Blob([JSON.stringify(S,null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='jiayou-backup-'+(S.name||'me').toLowerCase()+'-'+today()+'.json';document.body.appendChild(a);a.click();a.remove()}
+function importP(inp){const f=inp.files[0];if(!f)return;f.text().then(t=>{let o;try{o=JSON.parse(t)}catch(e){alert('This file is not a Jiāyóu backup.');return}if(!o||!o.items||!o.days){alert('This file is not a Jiāyóu backup.');return}if(!confirm('Replace the progress on this phone with the backup from '+(o.name||'unknown')+'?'))return;S=migrate(o);save();render()})}
+function vSettings(){let h='<h1>Settings</h1><div class="card"><label class="sw"><span>Name</span><input type="text" style="max-width:55%" value="'+esc(S.name)+'" onchange="setName(this.value.trim())"></label><label class="sw"><span>Show pinyin under characters<br><span class="small mute">Turn off later to train reading. Help always brings it back.</span></span><input type="checkbox" '+(S.settings.pinyin?'checked':'')+' onchange="S.settings.pinyin=this.checked;save()"></label><label class="sw"><span>Speak answers automatically</span><input type="checkbox" '+(S.settings.auto?'checked':'')+' onchange="S.settings.auto=this.checked;save()"></label><label class="sw"><span>Voice speed</span><select style="max-width:45%" onchange="S.settings.rate=+this.value;save();speak(\'你好\')">'+[[0.6,'Slow'],[0.8,'Normal for learners'],[1,'Natural']].map(o=>'<option value="'+o[0]+'" '+(S.settings.rate==o[0]?'selected':'')+'>'+o[1]+'</option>').join('')+'</select></label><button onclick="speak(\'我们一起学习汉语\')">Test the Chinese voice</button><p class="small mute" id="vinfo"></p></div>';
+  h+='<h2>Book audio</h2><div class="card"><p class="small">If you own the recordings that come with the textbook (files named like <b>21-1.mp3</b>), you can load them into the app on this phone. They stay on this phone only and are shown on each lesson page.</p><button onclick="$(\'#aud\').click()">Choose audio files</button> <button class="ghost" onclick="clearAudio()">Remove them</button><input type="file" id="aud" accept="audio/*,.mp3" multiple style="display:none" onchange="importAudio(this)"><p class="small mute" id="ainfo"></p></div>';
+  h+='<h2>Storage</h2><div class="card"><p class="small" id="pinfo">Checking…</p><p class="small mute">Updates to the app never touch your progress. Only clearing this site\'s data in the browser would remove it, so keep a backup file (Progress → Backup).</p><button class="ghost" onclick="resetAll()">Reset all progress on this phone</button></div><p class="small mute center">Jiāyóu 加油 · data format v'+SCHEMA+' · vocabulary and grammar topics follow New Concept Chinese 1; sentences and explanations written for this app.</p>';
+  setTimeout(async()=>{const v=$('#vinfo');if(v)v.textContent=voice?('Voice: '+voice.name):'No Chinese voice found on this device yet. On Android, install "Chinese" under Settings → Text-to-speech.';const n=(await idbKeys('audio')).length;const a=$('#ainfo');if(a)a.textContent=n?n+' audio files stored on this phone.':'No audio files stored.';const p=$('#pinfo');if(p){let ok=false;try{ok=navigator.storage&&navigator.storage.persisted?await navigator.storage.persisted():false}catch(e){}p.textContent=ok?'This phone has agreed to keep the app\'s data permanently.':'The phone has not yet promised to keep the data permanently. Adding the app to the home screen usually fixes this.'}},0);return h}
+async function importAudio(inp){const fs=[...inp.files];let n=0;for(const f of fs){const m=f.name.match(/^(\d{2}-\d+)/);if(!m)continue;await idbSet('audio',m[1],f);n++}alert(n+' audio files stored on this phone.');render()}
+async function clearAudio(){if(confirm('Remove the stored audio files from this phone?')){await idbClear('audio');render()}}
+function resetAll(){if(confirm('Really delete all progress on this phone?')&&confirm('This cannot be undone. Delete?')){S=blank();save();render()}}
+
+/* ---------- router ---------- */
+function go(h){location.hash=h}
+const TABS=[['#/','家','Home'],['#/vocab','词','Words'],['#/grammar','文','Grammar'],['#/progress','进','Progress'],['#/settings','设','Settings']];
+function render(){const h=location.hash||'#/';const m=$('#main');
+  if(h==='#/run'&&R){$('#nav').style.display='none';showQ();return}
+  if(h==='#/flash'&&F){$('#nav').style.display='none';showF();return}
+  if(h==='#/done')return;
+  $('#nav').style.display=S.name?'flex':'none';
+  let v;const lm=h.match(/^#\/lesson\/(\d+)/);
+  if(lm)v=vLesson(+lm[1]);else if(h==='#/vocab')v=vVocab();else if(h==='#/grammar')v=vGrammar();else if(h==='#/progress')v=vProgress();else if(h==='#/settings')v=vSettings();else v=vHome();
+  m.innerHTML=v;const cur=lm?'#/':(TABS.find(t=>t[0]===h)?h:'#/');
+  $('#nav').innerHTML=TABS.map(t=>'<a href="'+t[0]+'" class="'+(t[0]===cur?'on':'')+'"><b class="zh">'+t[1]+'</b>'+t[2]+'</a>').join('');window.scrollTo(0,0)}
+window.addEventListener('hashchange',()=>{if((location.hash==='#/run'&&R)||(location.hash==='#/flash'&&F))return;if(location.hash!=='#/run')R=null;if(location.hash!=='#/flash'&&location.hash!=='#/done')F=null;render()});
+
+/* ---------- start ---------- */
+load();
+(async()=>{ // if the main copy is missing but the second copy exists, restore it
+  if(!localStorage.getItem(KEY)){const b=await idbGet('kv','progress');if(b){try{S=migrate(JSON.parse(b));save()}catch(e){}}}
+  if(location.hash==='#/run'||location.hash==='#/flash'||location.hash==='#/done')location.hash='#/';
+  render();
+})();
+if('serviceWorker' in navigator&&location.protocol==='https:'){try{navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}}
+</script>
+</body>
+</html>
