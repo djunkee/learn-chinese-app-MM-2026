@@ -81,6 +81,12 @@ textarea{font:inherit;width:100%;min-height:84px;padding:10px;border-radius:10px
 .block{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:12px 0}.block>summary{font-weight:700}
 svg.map{width:100%;height:auto;display:block}svg.map text{font-family:inherit}svg.map .tap{cursor:pointer}
 .pli{display:flex;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}.pli:first-child{border-top:0}.pli button{min-height:36px;padding:4px 10px}
+.daily{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--red);border-radius:14px;padding:14px;margin:12px 0}
+.ext{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ext button{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:2px}.ext b{font-size:1rem}.ext span{font-size:.78rem;color:var(--mute)}
+.line{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}.line:first-child{border-top:0}.line .who{flex:none;width:40px;text-align:center;font-weight:700;color:var(--red2)}
+.rad{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}.rad:first-child{border-top:0}.rad .r{flex:none;width:52px;height:52px;border-radius:10px;background:var(--soft);display:grid;place-items:center;font-size:1.9rem}
+.chs span{display:inline-block;font-size:1.5rem;margin-right:6px;cursor:pointer}
+.av{flex:none;border-radius:50%;display:block}
 </style>
 </head>
 <body>
@@ -95,6 +101,7 @@ svg.map{width:100%;height:auto;display:block}svg.map text{font-family:inherit}sv
 const KEY='jiayou-progress';           // do not rename: progress lives under this key
 // Release history, newest first. The first entry is the running version; keep version.json in step.
 const RELEASES=[
+ {v:'1.4.0',d:'2026-11-12 22:30',n:['New every day: a word or a Chinese saying of the day at the top of the home screen','HSK 2 section: eight themed lessons with the 123 HSK 2 words the app did not have yet and the new grammar','Stories and dialogues with questions, 14 to start with','Number, time, price and date drills','Characters: 26 building blocks and a recognition quiz','Mock test in exam style: a 15-question mini test and a full 60-question test with timer and score out of 200','My mistakes: redo what you got wrong','Cartoon figures of Moritz and Andrei on the start screen, the home screen and in the dialogues']},
  {v:'1.3.0',d:'2026-11-12 02:00',n:['Home is organised in sections: the course book and special topics, each with a level label (HSK 1 · Basic)','Nine special topics with words, sentences, exercises and audio: cycling, running, sports, football, AI, travelling, geography of China, weather, Christmas','Geography topic explains how China is organised, with two schematic maps you can tap','Listen: build and save playlists of spoken lessons and speaking drills, for example for a one-hour run']},
  {v:'1.2.0',d:'2026-11-12 01:15',n:['Lessons 1–20 added: the app now covers all 40 lessons of New Concept Chinese 1','New Listen tab: a spoken lesson for running, and a say-it-first speaking drill for walking, both hands-free','Listen tab can also play your own book recordings one after another','Daily reminder: add a repeating reminder to your phone calendar from Settings','Short lessons borrow words from the neighbouring lesson so sessions stay full length']},
  {v:'1.1.2',d:'2026-11-12 00:30',n:['Feedback: share notes through the phone\'s share menu or straight into WhatsApp, where you pick the contact','After saving a note on a question you can share it right away']},
@@ -136,7 +143,7 @@ const rnd=n=>Math.floor(Math.random()*n);
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
 const PUNCT=/^[，。？！]$/;
 const BOOK=BOOKS[0], LESSONS=[].concat(...BOOKS.map(b=>{b.lessons.forEach(L=>{L.b=b});return b.lessons})), DICT=Object.assign({},EXTRA_PY);
-const LID=n=>(n>100?'top':'ncc1')+':'+n;                 // progress ids: do not change
+const LID=n=>(n>200?'hsk2':n>100?'top':'ncc1')+':'+n;                 // progress ids: do not change
 const isTopic=L=>L.b.kind==='topics';
 const LT=L=>isTopic(L)?L.en:'Lesson '+L.n;
 const NUM=L=>'<span class="num">'+(L.icon||L.n)+'</span>';
@@ -157,13 +164,13 @@ function wordHtml(z,p,big){return '<span class="'+(big?'big':'')+'"><span class=
 let voice=null;
 function pickVoice(){if(!('speechSynthesis' in window))return;const v=speechSynthesis.getVoices();voice=v.find(x=>/zh[-_]CN/i.test(x.lang))||v.find(x=>/^zh/i.test(x.lang))||null}
 if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
-function speak(text,slow,queue){if(!('speechSynthesis' in window))return;try{if(!queue)speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text.replace(/[\s_]/g,''));u.lang='zh-CN';if(voice)u.voice=voice;u.rate=slow?0.55:(S.settings.rate||0.8);speechSynthesis.speak(u)}catch(e){}}
+function speak(text,slow,queue){if(!text||!('speechSynthesis' in window))return;try{if(!queue)speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text.replace(/[\s_]/g,''));u.lang='zh-CN';if(voice)u.voice=voice;u.rate=slow?0.55:(S.settings.rate||0.8);speechSynthesis.speak(u)}catch(e){}}
 const spk=(t,extra)=>'<button class="spk" aria-label="Listen" onclick="event.stopPropagation();speak(\''+t.replace(/'/g,'')+'\')">🔊</button>'+(extra?'<button class="spk" aria-label="Listen slowly" onclick="event.stopPropagation();speak(\''+t.replace(/'/g,'')+'\',1)">🐢</button>':'');
 
 /* ---------- spaced repetition ---------- */
 const GAP=[0,1,2,4,8,16];
 function item(id){return S.items[id]||(S.items[id]={b:0,d:0,r:0,w:0})}
-function grade(id,ok,helped){const it=item(id),t=dayNum(today());if(ok&&!helped){it.b=Math.min(5,it.b+1);it.r++}else if(!ok){it.b=Math.max(0,it.b-1);it.w++}it.d=t+(ok?GAP[it.b]:0);it.s=1}
+function grade(id,ok,helped){const it=item(id),t=dayNum(today());if(ok&&!helped){it.b=Math.min(5,it.b+1);it.r++}else if(!ok){it.b=Math.max(0,it.b-1);it.w++;it.lw=t}it.d=t+(ok?GAP[it.b]:0);it.s=1}
 function weight(id){const it=S.items[id],t=dayNum(today());if(!it||!it.s)return 3;if(it.d<=t)return 5-Math.min(it.b,4)+1;return 0.4}
 function pickWeighted(list,n,idf){const pool=list.map(x=>({x,k:Math.pow(Math.random(),1/weight(idf(x)))}));pool.sort((a,b)=>b.k-a.k);return pool.slice(0,n).map(o=>o.x)}
 function mastery(L){let s=0;L.W.forEach(w=>{const it=S.items['w:'+LID(L.n)+':'+w[0]];s+=it?it.b:0});return s/(L.W.length*5)}
@@ -205,6 +212,7 @@ function makeSession(scope,size,mode){
 let R=null;
 const SIZES={quick:{n:8,label:'Quick',time:'about 2 min'},std:{n:16,label:'Standard',time:'about 5 min'},deep:{n:32,label:'Deep',time:'10–12 min'}};
 function start(scope,size,mode){const qs=makeSession(scope,SIZES[size]?SIZES[size].n:size,mode);if(!qs.length)return;R={qs,i:0,right:0,t0:Date.now(),scope,size,mode,back:location.hash};if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();location.hash='#/run';render()}
+function startQs(qs,again){if(!qs.length)return;R={qs,i:0,right:0,t0:Date.now(),scope:'x',size:qs.length,mode:'',back:location.hash,again};location.hash='#/run';render()}
 function showQ(){
   const q=R.qs[R.i];q.done=false;q.helped=q.helped||false;
   let h='<div class="row"><button class="ghost" onclick="quit()">✕</button><div class="grow small mute">Question '+(R.i+1)+' of '+R.qs.length+'</div><button class="ghost" aria-label="Feedback on this question" onclick="fbOpen()">✎</button><button class="ghost" id="helpbtn" onclick="help()">💡 Help</button></div><div class="prog"><i style="width:'+(R.i/R.qs.length*100)+'%"></i></div><h3>'+q.title+'</h3>';
@@ -233,12 +241,13 @@ function help(){const q=R.qs[R.i];if(q.done)return;q.helped=true;const hb=$('#he
   if(q.cut){const bs=[...document.querySelectorAll('#opts button')];const wrong=shuffle(q.opts.map((o,k)=>o.ok?-1:k).filter(k=>k>=0)).slice(0,2);wrong.forEach(k=>bs[k].classList.add('gone'))}
   hb.innerHTML=q.help||'Pinyin is shown.';if(q.helpSay)speak(q.say)}
 function pick(k){const q=R.qs[R.i];if(q.done)return;const bs=[...document.querySelectorAll('#opts button')];bs.forEach((b,i)=>{b.disabled=true;if(q.opts[i].ok)b.classList.add('ok')});if(!q.opts[k].ok)bs[k].classList.add('bad');const z=q.opts[k].z;if(z)speak(z);finish(!!q.opts[k].ok,z)}
-function finish(ok,said){const q=R.qs[R.i];q.done=true;grade(q.id,ok,q.helped);save();if(ok)R.right++;
+function finish(ok,said){const q=R.qs[R.i];q.done=true;if(q.id)grade(q.id,ok,q.helped);save();if(ok)R.right++;
   document.querySelectorAll('.nopy').forEach(e=>e.classList.remove('nopy'));document.querySelectorAll('.pyopt').forEach(e=>e.style.display='');
   const hb=$('#helpbtn');if(hb)hb.disabled=true;const cb=$('#check');if(cb)cb.style.display='none';
   let sol='';
   if(q.type==='build'||q.type==='read')sol=toksHtml(q.s.toks)+'<p>'+esc(q.s.py)+'</p><p class="mute">'+esc(q.s.e)+'</p>';
   else if(q.type==='cloze')sol=toksHtml(q.toks.map(t=>({z:t.z,p:t.p})))+'<p class="mute">'+esc(q.e)+'</p>';
+  else if(q.sol)sol=q.sol;
   else sol=wordHtml(q.rev.z,q.rev.p)+' <span style="margin-left:8px">'+esc(q.rev.e)+'</span>';
   $('#fb').innerHTML='<div class="fb '+(ok?'ok':'bad')+'"><b>'+(ok?(q.helped?'Right, with help':'Right! 对 duì'):'Not quite')+'</b><div style="margin:6px 0">'+sol+'</div><div class="row">'+spk(q.say,1)+'<button class="primary grow" onclick="next()">'+(R.i+1<R.qs.length?'Next':'Finish')+'</button></div></div>';
   if(S.settings.auto&&said!==q.say)speak(q.say,false,!!said);
@@ -254,7 +263,7 @@ function fbClear(){if(confirm('Delete the notes that were already sent?')){S.fee
 function next(){R.i++;if(R.i<R.qs.length)showQ();else endRun()}
 function quit(){if(R&&R.i>0&&!R.ended){const sec=Math.min(Math.round((Date.now()-R.t0)/1000),R.i*60);logDay(R.i,R.right,sec)}const b=R?R.back:'#/';R=null;location.hash=b||'#/';render()}
 function endRun(){const sec=Math.min(Math.round((Date.now()-R.t0)/1000),R.qs.length*60);logDay(R.qs.length,R.right,sec);R.ended=true;const pct=Math.round(R.right/R.qs.length*100);const r=R;
-  $('#main').innerHTML='<div class="center" style="padding-top:30px"><div class="zh" style="font-size:3.2rem;color:var(--red)">'+(pct>=80?'很好':'加油')+'</div><p class="mute">'+(pct>=80?'hěn hǎo · very good':'jiāyóu · keep going')+'</p><h1>'+r.right+' of '+r.qs.length+' right</h1><p class="mute">'+Math.floor(sec/60)+' min '+(sec%60)+' s · streak '+streak()+' day'+(streak()===1?'':'s')+'</p></div><div class="cheer">'+cheer()+'</div><div class="row"><button class="grow" onclick="start(\''+r.scope+'\',\''+r.size+'\',\''+(r.mode||'')+'\')">Again</button><button class="primary grow" onclick="quit()">Done</button></div>';
+  $('#main').innerHTML='<div class="center" style="padding-top:30px"><div class="zh" style="font-size:3.2rem;color:var(--red)">'+(pct>=80?'很好':'加油')+'</div><p class="mute">'+(pct>=80?'hěn hǎo · very good':'jiāyóu · keep going')+'</p><h1>'+r.right+' of '+r.qs.length+' right</h1><p class="mute">'+Math.floor(sec/60)+' min '+(sec%60)+' s · streak '+streak()+' day'+(streak()===1?'':'s')+'</p></div><div class="cheer">'+cheer()+'</div><div class="row"><button class="grow" onclick="'+(r.again||('start(\''+r.scope+'\',\''+r.size+'\',\''+(r.mode||'')+'\')'))+'">Again</button><button class="primary grow" onclick="quit()">Done</button></div>';
   window.scrollTo(0,0)}
 function cheer(){const me=S.name||'You',bud=S.buddy||(/andrei/i.test(me)?'Moritz':'Andrei');const d=dayNum(today())+(R?R.i:0)+Object.keys(S.days).length;const c=CHEERS[d%CHEERS.length];return '<div class="row" onclick="speak(\''+c.z+'\')" style="cursor:pointer"><div class="grow"><div class="zh" style="font-size:1.5rem;line-height:1.3">'+esc(c.z)+'</div><div><b>'+esc(c.p)+'</b></div><div class="mute">'+esc(c.e)+'</div></div>'+spk(c.z,1)+'</div><div style="margin-top:6px">'+esc(c.t.replace(/\{me\}/g,me).replace(/\{buddy\}/g,bud))+'</div>'}
 
@@ -272,17 +281,19 @@ function sessButtons(scope){return '<div class="sess">'+Object.keys(SIZES).map((
 function vHome(){
   if(!S.name)return vWho();
   const d=S.days[today()],st=streak();
-  let h='<div class="hero"><img src="icon.svg" alt=""><div><h1><span class="zh">你好</span> <span class="small mute" style="font-weight:400">nǐ hǎo</span>, '+esc(S.name)+'</h1><div class="mute small">'+(d?('Today: '+d.q+' questions, '+Math.max(1,Math.round(d.sec/60))+' min'):'Nothing practised yet today')+' · streak '+st+' day'+(st===1?'':'s')+'</div></div></div>';
+  let h='<div class="hero">'+(meKey()?avatar(meKey(),52):'<img src="icon.svg" alt="">')+'<div><h1><span class="zh">你好</span> <span class="small mute" style="font-weight:400">nǐ hǎo</span>, '+esc(S.name)+'</h1><div class="mute small">'+(d?('Today: '+d.q+' questions, '+Math.max(1,Math.round(d.sec/60))+' min'):'Nothing practised yet today')+' · streak '+st+' day'+(st===1?'':'s')+'</div></div></div>';
+  h+=dailyHtml();
   h+='<div class="cheer">'+cheer()+'</div>';
   h+='<h2>Today\'s mixed practice</h2><p class="mute small">All lessons together. Words you find hard come up more often. Pick how long you have:</p>'+sessButtons('all');
+  h+=extrasHtml();
   BOOKS.forEach(B=>{const open=(S.settings.open||{})[B.id];const isOpen=open===undefined?true:open;const avg=Math.round(B.lessons.reduce((a,L)=>a+mastery(L),0)/B.lessons.length*100);
     h+='<details class="block" '+(isOpen?'open':'')+' ontoggle="(S.settings.open=S.settings.open||{})[\''+B.id+'\']=this.open;save()"><summary><span style="font-size:1.1rem">'+esc(B.title)+'</span> <span class="zh mute" style="font-weight:400">'+esc(B.zh)+'</span> <span class="tag">'+esc(B.level||'')+'</span><br><span class="small mute" style="font-weight:400">'+B.lessons.length+(B.kind==='topics'?' topics':' lessons')+' · '+avg+'% learned · '+esc(B.note)+'</span></summary><div class="lessons" style="margin-top:10px">';
     B.lessons.forEach(L=>{const m=Math.round(mastery(L)*100);h+='<button class="lesson" onclick="go(\'#/lesson/'+L.n+'\')">'+NUM(L)+'<span class="grow"><span class="zh" style="font-size:1.1rem">'+esc(L.zh)+'</span><br><span class="small mute">'+esc(L.en)+'</span><span class="bar"><i style="width:'+m+'%"></i></span></span></button>'});
     h+='</div></details>'});
-  h+='<p class="mute small" style="margin-top:16px">Everything here is at level HSK 1 · Basic. Harder levels and a level filter can be added later.</p><p class="mute small center">Version '+APP_VERSION+' · '+APP_DATE+'</p>';
+  h+='<p class="mute small" style="margin-top:16px">Each section carries its level. A level filter can be added later.</p><p class="mute small center">Version '+APP_VERSION+' · '+APP_DATE+'</p>';
 
   return h}
-function vWho(){return '<div class="center" style="padding-top:24px"><img src="icon.svg" alt="" style="width:96px;height:96px;border-radius:24px"><h1 style="margin-top:14px">Jiāyóu <span class="zh">加油</span></h1><p class="mute">"Add oil": what you shout at a runner at kilometre 35.<br>Chinese practice for Moritz and Andrei.</p><h2>Who is practising on this phone?</h2><div class="row"><button class="primary grow" onclick="setName(\'Moritz\')">Moritz</button><button class="primary grow" onclick="setName(\'Andrei\')">Andrei</button></div><p class="mute small">Or type another name:</p><div class="row"><input type="text" id="nm" placeholder="Name"><button onclick="setName($(\'#nm\').value.trim())">OK</button></div><p class="mute small" style="margin-top:18px">Progress is stored on this phone only. Add the app to your home screen so the phone keeps it.</p></div>'}
+function vWho(){return '<div class="center" style="padding-top:24px"><img src="icon.svg" alt="" style="width:96px;height:96px;border-radius:24px"><h1 style="margin-top:14px">Jiāyóu <span class="zh">加油</span></h1><p class="mute">"Add oil": what you shout at a runner at kilometre 35.<br>Chinese practice for Moritz and Andrei.</p><h2>Who is practising on this phone?</h2><div class="row"><button class="grow" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px" onclick="setName(\'Moritz\')">'+avatar('m',84)+'<b>Moritz</b></button><button class="grow" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px" onclick="setName(\'Andrei\')">'+avatar('a',84)+'<b>Andrei</b></button></div><p class="mute small">Or type another name:</p><div class="row"><input type="text" id="nm" placeholder="Name"><button onclick="setName($(\'#nm\').value.trim())">OK</button></div><p class="mute small" style="margin-top:18px">Progress is stored on this phone only. Add the app to your home screen so the phone keeps it.</p></div>'}
 function setName(n){if(!n)return;S.name=n;S.buddy=/^andrei$/i.test(n)?'Moritz':(/^moritz$/i.test(n)?'Andrei':'your training partner');save();render()}
 function vLesson(n){const L=lessonOf(n);if(!L)return vHome();
   let h='<button class="link" onclick="go(\'#/\')">← Home</button><div class="row" style="margin-top:6px">'+NUM(L)+'<div><div class="zh" style="font-size:1.5rem;line-height:1.2">'+esc(L.zh)+'</div><div class="small">'+esc(L.py)+'</div><div class="small mute">'+esc(L.en)+'</div></div><span class="grow"></span>'+spk(L.zh)+'</div><p><span class="tag">'+esc(L.topic)+'</span></p>';
@@ -320,6 +331,117 @@ function vSettings(){let h='<h1>Settings</h1><div class="card"><label class="sw"
 async function importAudio(inp){const fs=[...inp.files];let n=0;for(const f of fs){const m=f.name.match(/^(\d{2}-\d+)/);if(!m)continue;await idbSet('audio',m[1],f);n++}alert(n+' audio files stored on this phone.');render()}
 async function clearAudio(){if(confirm('Remove the stored audio files from this phone?')){await idbClear('audio');render()}}
 function resetAll(){if(confirm('Really delete all progress on this phone?')&&confirm('This cannot be undone. Delete?')){S=blank();save();render()}}
+
+/* ---------- cartoon figures of the two learners ---------- */
+function avatar(k,size){const m=k==='m';const skin=m?'#eebd9c':'#e8b594',shirt=m?'#8f2334':'#2f6fc4';
+  let h='<svg class="av" width="'+size+'" height="'+size+'" viewBox="0 0 100 100" role="img" aria-label="'+(m?'Moritz':'Andrei')+'"><circle cx="50" cy="50" r="50" fill="'+(m?'#f6dcd6':'#d9e6f7')+'"/><path d="M14 100c2-20 16-27 36-27s34 7 36 27z" fill="'+shirt+'"/><path d="M40 73l10 10 10-10-4-3H44z" fill="'+(m?'#a93346':'#4a86d6')+'"/><rect x="43" y="60" width="14" height="14" rx="5" fill="'+skin+'"/><ellipse cx="29" cy="46" rx="4" ry="6" fill="'+skin+'"/><ellipse cx="71" cy="46" rx="4" ry="6" fill="'+skin+'"/><ellipse cx="50" cy="44" rx="21" ry="25" fill="'+skin+'"/>';
+  if(m)h+='<path d="M30 46c0 16 9 25 20 25s20-9 20-25c-2 9-6 13-10 14-3-3-17-3-20 0-4-1-8-5-10-14z" fill="#7a5a44" opacity=".8"/><path d="M39 31q5-3 9 0M52 31q4-3 9 0" stroke="#6b4c39" stroke-width="2.2" fill="none" stroke-linecap="round"/>';
+  else h+='<path d="M28 42c-2-16 8-26 22-26s25 9 22 26c-2-8-5-12-9-14-8 3-20 3-27-1-4 3-6 8-8 15z" fill="#9aa0a6"/><path d="M38 34q5-2 9 0M53 34q4-2 9 0" stroke="#777" stroke-width="2" fill="none" stroke-linecap="round"/>';
+  h+='<circle cx="42" cy="42" r="2.4" fill="#2b2622"/><circle cx="58" cy="42" r="2.4" fill="#2b2622"/><path d="M50 44v7" stroke="#c98f70" stroke-width="2" stroke-linecap="round"/><path d="M42 57q8 7 16 0" stroke="'+(m?'#fff':'#8a4a3a')+'" stroke-width="2.4" fill="none" stroke-linecap="round"/>';
+  if(!m)h+='<g fill="none" stroke="#2b2f38" stroke-width="2.4"><rect x="33" y="36" width="15" height="12" rx="4"/><rect x="52" y="36" width="15" height="12" rx="4"/><path d="M48 41h4M33 40l-5-2M67 40l5-2"/></g>';
+  return h+'</svg>'}
+function meKey(){return /^moritz$/i.test(S.name)?'m':(/^andrei$/i.test(S.name)?'a':'')}
+
+/* ---------- something new every day ---------- */
+function hash(s){let h=7;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h}
+let DW=null;
+function dailyItem(){const d=dayNum(today());if(d%3===0){const s=SAYINGS[Math.floor(d/3)%SAYINGS.length];return {kind:'Saying of the day',z:s[0],p:s[1],lit:s[2],e:s[3]}}
+  if(!DW)DW=ALLW.filter(w=>w.n<200&&w.pos!=='part.'&&w.pos!=='p.n.'&&w.pos!=='suf.'&&w.pos!=='pref.'&&!/^\(/.test(w.e)).filter((w,i,a)=>a.findIndex(x=>x.z===w.z)===i).sort((a,b)=>hash(a.z+'x')-hash(b.z+'x'));
+  const w=DW[(d-Math.floor(d/3))%DW.length],L=lessonOf(w.n);let ex=null;for(let i=0;i<L.S.length;i++){if(L.S[i][0].split(' ').includes(w.z)){ex=sent(L,i);break}}
+  return {kind:'Word of the day',z:w.z,p:w.p,e:w.e,from:LT(L),n:w.n,ex}}
+function dailyHtml(){const t=dailyItem(),dt=new Date();const lab=dt.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+  let h='<div class="daily"><div class="row"><span class="tag">'+t.kind+'</span><span class="small mute grow" style="text-align:right">'+lab+'</span></div><div class="row" style="margin-top:8px"><div class="grow"><div class="zh" style="font-size:'+(t.z.length>8?'1.5':'2.1')+'rem;line-height:1.3">'+esc(t.z)+'</div><div><b>'+esc(t.p)+'</b></div></div>'+spk(t.z,1)+'</div>';
+  if(t.lit)h+='<p class="small mute" style="margin:6px 0 0">Word for word: '+esc(t.lit)+'</p><p style="margin:4px 0 0">'+esc(t.e)+'</p>';
+  else{h+='<p style="margin:6px 0 0">'+esc(t.e)+' <button class="link small" onclick="go(\'#/lesson/'+t.n+'\')">'+esc(t.from)+'</button></p>';if(t.ex)h+='<div style="margin-top:8px" onclick="speak(\''+t.ex.text+'\')">'+toksHtml(t.ex.toks)+'<div class="small mute">'+esc(t.ex.e)+'</div></div>'}
+  return h+'</div>'}
+
+/* ---------- extras on the home screen ---------- */
+function mistakeIds(){const t=dayNum(today());const all=Object.keys(S.items).filter(id=>{const it=S.items[id];return it.w>0&&it.b<=2});const week=all.filter(id=>S.items[id].lw&&t-S.items[id].lw<=7);return week.length>=4?week:all}
+function extrasHtml(){const n=mistakeIds().length;return '<h2>More ways to practise</h2><div class="ext"><button onclick="go(\'#/stories\')"><b>📖 Stories</b><span>'+STORIES.length+' short dialogues with questions</span></button><button onclick="go(\'#/numbers\')"><b>🔢 Numbers</b><span>numbers, times, prices, dates</span></button><button onclick="go(\'#/chars\')"><b class="zh">字 Characters</b><span>'+RADICALS.length+' building blocks</span></button><button onclick="go(\'#/test\')"><b>📝 Mock test</b><span>10 min or the full 55 min</span></button><button style="grid-column:1/3" '+(n?'':'disabled')+' onclick="startMistakes()"><b>🔁 My mistakes</b><span>'+(n?n+' items you got wrong · up to 16 questions · about 5 min':'nothing to repeat yet')+'</span></button></div>'}
+function startMistakes(){const ids=shuffle(mistakeIds()).slice(0,16),qs=[];ids.forEach(id=>{const m=id.split(':'),L=lessonOf(+m[2]);if(!L)return;let q=null;
+    if(m[0]==='w'){const w=ALLW.find(x=>x.id===id);if(w)q=qWord(w,['h2e','e2h','listen'][rnd(3)],ALLW.filter(x=>x.n===w.n))}
+    else if(m[0]==='c'&&L.C[+m[3]])q=qCloze(L,+m[3]);else if(m[0]==='s'&&L.S[+m[3]])q=qBuild(L,+m[3]);
+    else if(m[0]==='r'&&L.S[+m[3]])q=qRead(L,+m[3],L.S.map((_,i)=>[L,i]).concat(LESSONS[0].S.map((_,i)=>[LESSONS[0],i])));
+    if(q)qs.push(q)});startQs(qs,'startMistakes()')}
+
+/* ---------- stories and dialogues ---------- */
+function sline(x){const z=x[1].split(' ');const p=x[2].split(' ').map(y=>y.replace(/_/g,' '));let k=0;const toks=z.map(t=>PUNCT.test(t)?{z:t,p:''}:{z:t,p:p[k++]});return {who:x[0],toks,text:z.join(''),e:x[3]}}
+function vStories(){let h='<button class="link" onclick="go(\'#/\')">← Home</button><h1>Stories and dialogues</h1><p class="mute small">Read or listen, tap any word you do not know, then answer two questions. About 3 minutes each.</p>';
+  [1,2].forEach(lv=>{h+='<h2>'+(lv===1?'HSK 1 · Basic':'HSK 2 · Elementary')+'</h2><div class="lessons">';STORIES.filter(s=>s.lv===lv).forEach(s=>{const done=(S.stories||{})[s.id];h+='<button class="lesson" onclick="go(\'#/story/'+s.id+'\')"><span class="num">'+s.icon+'</span><span class="grow"><span class="zh" style="font-size:1.1rem">'+esc(s.zh)+'</span><br><span class="small mute">'+esc(s.en)+(done?' · done ✓':'')+'</span></span></button>'});h+='</div>'});return h}
+function whoHtml(s,w){if(s.neutral)return '<span class="who">'+w+'</span>';return '<span class="who">'+avatar(w==='A'?'m':'a',40)+'</span>'}
+function vStory(id){const s=STORIES.find(x=>x.id===id);if(!s)return vStories();const py=S.settings.pinyin?'':' nopy';
+  let h='<button class="link" onclick="go(\'#/stories\')">← Stories</button><div class="row" style="margin-top:6px"><span class="num">'+s.icon+'</span><div class="grow"><div class="zh" style="font-size:1.4rem">'+esc(s.zh)+'</div><div class="small">'+esc(s.py)+'</div><div class="small mute">'+esc(s.en)+'</div></div></div><div class="row" style="margin:10px 0"><button class="primary grow" onclick="playStory(\''+s.id+'\')">▶ Listen to all</button><button class="grow" onclick="document.querySelectorAll(\'.sen\').forEach(e=>e.style.display=\'block\')">Show English</button></div><div class="card'+py+'">';
+  s.lines.forEach(x=>{const l=sline(x);h+='<div class="line" onclick="speak(\''+l.text+'\')">'+whoHtml(s,l.who)+'<span class="grow">'+toksHtml(l.toks)+'<div class="small mute sen" style="display:none">'+esc(l.e)+'</div></span></div>'});
+  h+='</div><p class="small mute">Tap a line to hear it, tap a word for its meaning.</p><button class="primary" style="width:100%" onclick="storyQuiz(\''+s.id+'\')">Answer '+s.qs.length+' questions</button>';return h}
+function playStory(id){const s=STORIES.find(x=>x.id===id);s.lines.forEach((x,i)=>speak(x[1],false,i>0))}
+function storyQuiz(id){const s=STORIES.find(x=>x.id===id);S.stories=S.stories||{};S.stories[id]=today();save();const text=s.lines.map(x=>x[1].replace(/ /g,'')).join('');
+  startQs(s.qs.map(q=>({type:'mc',title:esc(s.en),show:'<p style="font-size:1.2rem;margin:16px 0"><b>'+esc(q[0])+'</b></p>',opts:shuffle(q[1].map((t,i)=>({html:esc(t),ok:i===0}))),say:'',sol:'<span>'+esc(q[1][0])+'</span>',cut:false,help:'Go back and read the dialogue again.'})),'storyQuiz(\''+id+'\')')}
+
+/* ---------- numbers, times, prices, dates ---------- */
+const DG='零一二三四五六七八九',NPY={'零':'líng','一':'yī','二':'èr','三':'sān','四':'sì','五':'wǔ','六':'liù','七':'qī','八':'bā','九':'jiǔ','十':'shí','百':'bǎi','千':'qiān','万':'wàn','两':'liǎng','点':'diǎn','分':'fēn','半':'bàn','刻':'kè','块':'kuài','毛':'máo','月':'yuè','号':'hào','上':'shàng','下':'xià','午':'wǔ','晚':'wǎn','中':'zhōng'};
+function numZh(n){if(n<10)return DG[n];if(n<100){const t=Math.floor(n/10),u=n%10;return (t>1?DG[t]:'')+'十'+(u?DG[u]:'')}
+  const units=[[10000,'万'],[1000,'千'],[100,'百']];for(const [v,c] of units){if(n>=v){const head=Math.floor(n/v),rest=n%v;let s=(head===2&&v>=1000?'两':numZh(head))+c;if(rest){if(rest<v/10)s+='零';s+=(rest>=10&&rest<20?'一':'')+numZh(rest)}return s}}return ''}
+const npy=z=>z.split('').map(c=>NPY[c]||c).join(' ');
+const pad2=n=>String(n).padStart(2,'0');
+function numItem(cat){
+  if(cat==='n1'){const n=rnd(100);return {z:numZh(n),show:String(n),alts:()=>String(Math.max(0,Math.min(99,[n+1,n-1,n+10,n-10,+String(n).split('').reverse().join(''),rnd(100)][rnd(6)])))}}
+  if(cat==='n2'){const pool=[100+rnd(900),1000+rnd(9000),(1+rnd(9))*100,(1+rnd(9))*1000+rnd(10),(1+rnd(9))*10000,(1+rnd(99))*10000,100+rnd(9)*100+rnd(10)];const n=pool[rnd(pool.length)];const f=x=>x.toLocaleString('en-US');return {z:numZh(n),show:f(n),alts:()=>f([n+10,n-10,n+100,n*10,Math.round(n/10),n+1000,n+1][rnd(7)]||n+7)}}
+  if(cat==='time'){const h=6+rnd(18),m=[0,5,10,15,20,30,40,45,50,55][rnd(10)];const per=h<12?'上午':(h===12?'中午':(h<18?'下午':'晚上')),h12=h%12||12;const z=per+(h12===2?'两':numZh(h12))+'点'+(m===0?'':m===30?'半':m===15?'一刻':m<10?'零'+numZh(m)+'分':numZh(m)+'分');const f=(a,b)=>pad2(a)+':'+pad2(b);return {z,show:f(h,m),alts:()=>{const k=rnd(5);return k===0?f((h+12)%24,m):k===1?f(h,(m+30)%60):k===2?f((h+1)%24,m):k===3?f(h,m===15?45:15):f((h+23)%24,(m+5)%60)}}}
+  if(cat==='price'){const y=1+rnd(99),j=rnd(10);const z=numZh(y)+'块'+(j?DG[j]:'');const f=(a,b)=>'¥'+a+'.'+b+'0';return {z,show:f(y,j),alts:()=>{const k=rnd(4);return k===0?f(y,(j+1+rnd(8))%10):k===1?f(y+10>99?y-10:y+10,j):k===2?f(+String(y).split('').reverse().join('')||y+1,j):f(y+1,j)}}}
+  const mo=1+rnd(12),d=1+rnd(28),MN=['January','February','March','April','May','June','July','August','September','October','November','December'];const f=(a,b)=>b+' '+MN[a-1];return {z:numZh(mo)+'月'+numZh(d)+'号',show:f(mo,d),alts:()=>{const k=rnd(3);return k===0?f(d<=12?d:(mo%12)+1,mo):k===1?f((mo%12)+1,d):f(mo,(d%28)+1)}}}
+function numQ(cat){const it=numItem(cat);const wrong=new Set();let g=0;while(wrong.size<3&&g++<80){const a=it.alts();if(a!==it.show&&!/NaN|undefined/.test(a))wrong.add(a)}
+  const kind=rnd(3);const sol='<div class="zh" style="font-size:1.6rem">'+it.z+'</div><div>'+npy(it.z)+'</div><div class="mute">'+it.show+'</div>';
+  if(kind===0)return {type:'mc',title:'Listen. Which one is it?',show:'<div class="center" style="margin:16px 0">'+spk(it.z,1)+'</div>',auto:it.z,opts:shuffle([{html:'<span class="h">'+it.show+'</span>',ok:1},...[...wrong].map(t=>({html:'<span class="h">'+t+'</span>'}))]),say:it.z,sol,help:it.z+' · '+npy(it.z)};
+  if(kind===1)return {type:'mc',title:'Read. Which one is it?',show:'<div class="center" style="margin:16px 0"><div class="zh" style="font-size:2rem">'+it.z+'</div><div class="mute">'+npy(it.z)+'</div></div>',auto:it.z,opts:shuffle([{html:'<span class="h">'+it.show+'</span>',ok:1},...[...wrong].map(t=>({html:'<span class="h">'+t+'</span>'}))]),say:it.z,sol,cut:true,help:'Two wrong answers removed.'};
+  const others=new Set();g=0;while(others.size<3&&g++<80){const o=numItem(cat);if(o.z!==it.z)others.add(o.z)}
+  return {type:'mc',title:'How do you say it in Chinese?',show:'<p class="center" style="font-size:1.8rem;margin:16px 0"><b>'+it.show+'</b></p>',opts:shuffle([{z:it.z,ok:1},...[...others].map(z=>({z}))]).map(o=>({html:'<span class="h zh">'+o.z+'</span><span class="p pyopt">'+npy(o.z)+'</span>',ok:o.ok,z:o.z})),say:it.z,sol,cut:true,help:'Two wrong answers removed.'}}
+const NCAT=[['n1','Numbers 0–99','HSK 1'],['n2','Hundreds, thousands and 万','HSK 2'],['time','Clock times','HSK 1'],['price','Prices','HSK 1'],['date','Dates','HSK 1']];
+function startNum(cat){const cats=cat==='mix'?NCAT.map(c=>c[0]):[cat];startQs(Array.from({length:10},(_,i)=>numQ(cats[i%cats.length])),'startNum(\''+cat+'\')')}
+function vNumbers(){return '<button class="link" onclick="go(\'#/\')">← Home</button><h1>Numbers</h1><p class="mute small">Hear or read a number, a time, a price or a date and pick the right one. Each round has 10 questions and takes about 2 minutes. New numbers every time.</p><button class="primary" style="width:100%" onclick="startNum(\'mix\')">Mixed round · 10 questions · about 2 min</button><div class="lessons" style="margin-top:10px">'+NCAT.map(c=>'<button class="lesson" onclick="startNum(\''+c[0]+'\')"><span class="grow"><b>'+c[1]+'</b><br><span class="small mute">'+c[2]+' · 10 questions</span></span></button>').join('')+'</div><div class="card small"><b>How numbers work</b><p>11 to 99 are built from 十: 十一 (11), 二十 (20), 三十五 (35). Then come 百 (100), 千 (1,000) and 万 (10,000). Chinese counts in ten-thousands, so 50,000 is 五万 and one million is 一百万.</p><p>A zero in the middle is said once as 零: 一百零五 (105). Between 110 and 119 the ten is said with 一: 一百一十 (110).</p><p>Times: hour + 点, then minutes + 分. 半 is half past, 一刻 a quarter past. 上午, 下午 and 晚上 come first. Two o\'clock is 两点.</p><p>Prices: 块 for the yuan, and the tenths can follow directly: 二十八块五 is ¥28.50.</p></div>'}
+
+/* ---------- characters: building blocks ---------- */
+const DISTINCT='氵亻讠饣扌忄辶艹钅⻊雨冫纟疒衤';
+function charWord(c){const w=ALLW.find(x=>x.z===c)||ALLW.find(x=>x.z.includes(c));return w?w.z+' '+w.p+' · '+w.e:''}
+function vChars(){let h='<button class="link" onclick="go(\'#/\')">← Home</button><h1>Characters</h1><div class="card"><p>Most Chinese characters are built from smaller parts. One part often hints at the <b>meaning</b>, another at the <b>sound</b>. Take 妈 (mā, mum): the left part 女 means "woman", the right part 马 is pronounced mǎ.</p><p>The meaning part is called a radical. Knowing about two dozen of them lets you guess what a new character is about, and makes characters much easier to tell apart.</p><p class="small mute">Parts are usually arranged left and right (你, 好), top and bottom (字, 茶) or outside and inside (国, 问).</p></div><button class="primary" style="width:100%" onclick="startChars()">Recognition quiz · 10 questions · about 2 min</button><h2>'+RADICALS.length+' building blocks</h2><div class="card">';
+  RADICALS.forEach(r=>{h+='<div class="rad"><span class="r zh">'+r[0]+'</span><span class="grow"><b>'+esc(r[2])+'</b> <span class="small mute">· '+esc(r[1])+'</span><br><span class="small">'+esc(r[3])+'</span><div class="chs zh">'+r[4].split('').map(c=>'<span onclick="charTip(event,this,\''+c+'\')">'+c+'</span>').join('')+'</div></span></div>'});
+  return h+'</div><p class="small mute">Tap a character to hear it and see a word from your lessons that uses it.</p>'}
+function charTip(ev,el,c){ev.stopPropagation();const t=$('#tip');t.innerHTML='<b class="zh">'+c+'</b><br>'+esc(charWord(c)||'');t.style.display='block';const r=el.getBoundingClientRect(),w=t.offsetWidth,hh=t.offsetHeight;t.style.left=Math.max(8,Math.min(innerWidth-w-8,r.left+r.width/2-w/2))+'px';t.style.top=(r.top-hh-8<8?r.bottom+8:r.top-hh-8)+'px';const wd=ALLW.find(x=>x.z===c)||ALLW.find(x=>x.z.includes(c));speak(wd?wd.z:c)}
+function charQ(){const r=RADICALS[rnd(RADICALS.length)],others=shuffle(RADICALS.filter(x=>x!==r&&x[2]!==r[2])).slice(0,3);const big=c=>'<div class="center zh" style="font-size:3rem;margin:10px 0">'+c+'</div>';const sol='<span class="zh" style="font-size:1.6rem">'+r[0]+'</span> '+esc(r[2])+' <span class="mute">· for example '+r[4].slice(0,4).split('').join(' ')+'</span>';
+  let kind=rnd(4);if(kind>=2&&!DISTINCT.includes(r[0]))kind=rnd(2);
+  if(kind===0)return {type:'mc',title:'What does this building block stand for?',show:big(r[0]),opts:shuffle([{t:r[2],ok:1},...others.map(o=>({t:o[2]}))]).map(o=>({html:esc(o.t),ok:o.ok})),say:'',sol,cut:true,help:'It appears in '+r[4].slice(0,3).split('').join(', ')+'.'};
+  if(kind===1)return {type:'mc',title:'Which building block means "'+esc(r[2])+'"?',show:'',opts:shuffle([{t:r[0],ok:1},...others.map(o=>({t:o[0]}))]).map(o=>({html:'<span class="h zh" style="font-size:1.8rem">'+o.t+'</span>',ok:o.ok})),say:'',sol,cut:true,help:esc(r[3])};
+  const c=r[4][rnd(r[4].length)];
+  if(kind===2){const ds=shuffle(RADICALS.filter(x=>x!==r)).slice(0,3).map(x=>x[4][rnd(x[4].length)]);return {type:'mc',title:'Which character contains '+r[0]+' ('+esc(r[2])+')?',show:big(r[0]),opts:shuffle([{t:c,ok:1},...ds.map(t=>({t}))]).map(o=>({html:'<span class="h zh" style="font-size:1.8rem">'+o.t+'</span>',ok:o.ok})),say:'',sol:sol+'<br>'+esc(charWord(c)),cut:true,help:'Look at the left side or the top of each character.'}}
+  return {type:'mc',title:'Which idea does this character probably belong to?',show:big(c),opts:shuffle([{t:r[2],ok:1},...others.map(o=>({t:o[2]}))]).map(o=>({html:esc(o.t),ok:o.ok})),say:'',sol:sol+'<br>'+esc(charWord(c)),cut:true,help:'Its building block is '+r[0]+'.'}}
+function startChars(){startQs(Array.from({length:10},charQ),'startChars()')}
+
+/* ---------- mock test in exam style ---------- */
+let T=null,TT=null;
+function testPools(lv){const Ls=LESSONS.filter(L=>lv===2?L.n>200:L.n<200);const sents=[];Ls.forEach(L=>L.S.forEach((_,i)=>{const s=sent(L,i);if(s.toks.length>=4)sents.push(s)}));const clz=[];Ls.forEach(L=>L.C.forEach((_,i)=>clz.push([L,i])));
+  const st=STORIES.filter(s=>lv===2?true:s.lv===1);const dq=[];st.forEach(s=>s.qs.forEach(q=>dq.push([s,q])));const qa=[];st.forEach(s=>{for(let i=0;i+1<s.lines.length;i++){if(/？$/.test(s.lines[i][1])&&s.lines[i][0]!==s.lines[i+1][0])qa.push([sline(s.lines[i]),sline(s.lines[i+1])])}});
+  return {sents:shuffle(sents),clz:shuffle(clz),dq:shuffle(dq),qa:shuffle(qa)}}
+function buildTest(lv,full){const P=testPools(lv),qs=[];const n=full?{tfl:10,mcl:10,dl:15,mcr:5,cz:5,tfr:5,qa:10}:{tfl:3,mcl:3,dl:3,mcr:2,cz:2,tfr:1,qa:1};let si=0;const nextS=()=>P.sents[si++%P.sents.length];const otherE=s=>{let o;do{o=P.sents[rnd(P.sents.length)]}while(o.e===s.e);return o.e};
+  const tf=(sec,listen)=>{const s=nextS(),truth=Math.random()<.5,st=truth?s.e:otherE(s);return {sec,part:listen?'Listen. Is the statement true?':'Read. Is the statement true?',audio:listen?[s.text]:null,show:(listen?'':'<div class="card center">'+toksHtml(s.toks)+'</div>')+'<p style="font-size:1.1rem"><b>'+esc(st)+'</b></p>',opts:[{html:'True',ok:truth},{html:'False',ok:!truth}],rev:s.text+' · '+s.e}};
+  const mc=(sec,listen)=>{const s=nextS(),w=new Set();while(w.size<2)w.add(otherE(s));return {sec,part:listen?'Listen. What does it mean?':'Read. What does it mean?',audio:listen?[s.text]:null,show:listen?'':'<div class="card center">'+toksHtml(s.toks)+'</div>',opts:shuffle([{html:esc(s.e),ok:true},...[...w].map(e=>({html:esc(e),ok:false}))]),rev:s.text+' · '+s.e}};
+  for(let i=0;i<n.tfl;i++)qs.push(tf('L',true));for(let i=0;i<n.mcl;i++)qs.push(mc('L',true));
+  P.dq.slice(0,n.dl).forEach(([s,q])=>qs.push({sec:'L',part:'Listen to the dialogue, then answer.',audio:s.lines.map(x=>x[1]),show:'<p style="font-size:1.1rem"><b>'+esc(q[0])+'</b></p>',opts:shuffle(q[1].map((t,i)=>({html:esc(t),ok:i===0}))),rev:s.en+': '+q[1][0]}));
+  for(let i=0;i<n.mcr;i++)qs.push(mc('R',false));
+  P.clz.slice(0,n.cz).forEach(([L,i])=>{const c=qCloze(L,i);qs.push({sec:'R',part:'Fill in the blank.',audio:null,show:'<div class="card center">'+toksHtml(c.toks)+'</div><p class="center">'+esc(c.e)+'</p>',opts:c.opts,rev:c.full+' · '+c.e})});
+  for(let i=0;i<n.tfr;i++)qs.push(tf('R',false));
+  P.qa.slice(0,n.qa).forEach((pair,k)=>{const others=shuffle(P.qa.filter(x=>x!==pair&&x[1].text!==pair[1].text)).slice(0,2);qs.push({sec:'R',part:'Which answer fits the question?',audio:null,show:'<div class="card center">'+toksHtml(pair[0].toks)+'</div>',opts:shuffle([{html:toksHtml(pair[1].toks),ok:true},...others.map(o=>({html:toksHtml(o[1].toks),ok:false}))]),rev:pair[0].text+' → '+pair[1].text})});
+  return qs}
+function startTest(lv,full){const qs=buildTest(lv,full);T={lv,full,qs,i:0,ans:[],t0:Date.now(),limit:(full?55:10)*60,plays:0};location.hash='#/exam';render();clearInterval(TT);TT=setInterval(()=>{if(!T)return clearInterval(TT);const left=T.limit-Math.floor((Date.now()-T.t0)/1000);const el=$('#tclock');if(el)el.textContent=Math.max(0,Math.floor(left/60))+':'+pad2(Math.max(0,left%60));if(left<=0)endT()},1000)}
+function playT(){if(!T)return;const q=T.qs[T.i];if(!q.audio||T.plays>=2)return;T.plays++;q.audio.forEach((a,i)=>speak(a,false,i>0));const b=$('#tplay');if(b){b.textContent=T.plays>=2?'Played twice':'▶ Play again (1 left)';b.disabled=T.plays>=2}}
+function showT(){const q=T.qs[T.i];T.plays=0;const nt=x=>x.replace(/ onclick="tip\(event,this\)"/g,'').replace(/tok tap/g,'tok');$('#main').innerHTML='<div class="row"><button class="ghost" onclick="if(confirm(\'Stop the test? It will not be scored.\'))endT(true,true)">✕</button><div class="grow small mute">'+(q.sec==='L'?'Listening':'Reading')+' · '+(T.i+1)+' of '+T.qs.length+'</div><b id="tclock"></b></div><div class="prog"><i style="width:'+(T.i/T.qs.length*100)+'%"></i></div><h3>'+q.part+'</h3>'+(q.audio?'<div class="center" style="margin:14px 0"><button id="tplay" onclick="playT()">▶ Play</button></div>':'')+nt(q.show)+'<div class="opts">'+q.opts.map((o,k)=>'<button onclick="pickT('+k+')">'+nt(o.html)+'</button>').join('')+'</div><p class="small mute" style="margin-top:14px">Test mode: no help, and answers are shown only at the end.</p>';if(q.audio)setTimeout(playT,400);window.scrollTo(0,0)}
+function pickT(k){if(!T)return;try{speechSynthesis.cancel()}catch(e){}T.ans[T.i]=k;T.i++;if(T.i<T.qs.length)showT();else endT()}
+function endT(silent,home){clearInterval(TT);if(!T)return;const t=T;T=null;try{speechSynthesis.cancel()}catch(e){}if(silent){if(home){location.hash='#/test';render()}return}
+  let l=0,ln=0,r=0,rn=0;const wrong=[];t.qs.forEach((q,i)=>{const ok=t.ans[i]!==undefined&&q.opts[t.ans[i]].ok;if(q.sec==='L'){ln++;if(ok)l++}else{rn++;if(ok)r++}if(!ok)wrong.push([i+1,q])});
+  const ls=Math.round(l/ln*100),rs=Math.round(r/rn*100),tot=ls+rs,sec=Math.round((Date.now()-t.t0)/1000);S.tests=S.tests||[];S.tests.push({d:today(),lv:t.lv,full:t.full,l:ls,r:rs});logDay(t.qs.length,l+r,Math.min(sec,t.limit));
+  $('#main').innerHTML='<div class="center" style="padding-top:20px"><div class="zh" style="font-size:2.6rem;color:var(--red)">'+(tot>=120?'通过':'加油')+'</div><p class="mute">'+(tot>=120?'tōngguò · passed':'jiāyóu · not yet, keep going')+'</p><h1>'+tot+' of 200</h1><p>Listening '+ls+' of 100 ('+l+'/'+ln+') · Reading '+rs+' of 100 ('+r+'/'+rn+')</p><p class="small mute">The real exam needs 120 of 200 to pass. '+(t.full?'':'This was the short version, so take the score as a rough guide.')+'</p></div>'+(wrong.length?'<h2>To look at again</h2><div class="card">'+wrong.map(w=>'<div class="word"><span class="grow small"><span class="mute">Question '+w[0]+' · '+esc(w[1].part)+'</span><br><span class="zh">'+esc(w[1].rev)+'</span></span></div>').join('')+'</div>':'')+'<button class="primary" style="width:100%" onclick="location.hash=\'#/test\';render()">Done</button>';location.hash='#/done';window.scrollTo(0,0)}
+function vTest(){const hist=(S.tests||[]).slice(-6).reverse();return '<button class="link" onclick="go(\'#/\')">← Home</button><h1>Mock test</h1><p class="mute small">Built like the HSK exam: first listening, then reading. Each recording can be played twice. There is no help, and you see the answers only at the end. Listening and reading each count 100 points; 120 of 200 is a pass.</p>'
+  +[[1,'HSK 1 level','lessons 1–40 and the special topics'],[2,'HSK 2 level','the HSK 2 section and all dialogues']].map(x=>'<div class="card"><h3>'+x[1]+'</h3><p class="small mute">Uses '+x[2]+'.</p><div class="row"><button class="primary grow" onclick="startTest('+x[0]+',false)">Mini test<br><span class="small">15 questions · 10 min</span></button><button class="grow" onclick="startTest('+x[0]+',true)">Full test<br><span class="small">60 questions · 55 min</span></button></div></div>').join('')
+  +(hist.length?'<h2>Your last results</h2><div class="card">'+hist.map(t=>'<div class="word"><span class="grow">'+t.d+' · HSK '+t.lv+' · '+(t.full?'full':'mini')+'</span><span class="small mute">'+(t.l+t.r)+' of 200 (L '+t.l+', R '+t.r+')</span></div>').join('')+'</div>':'')
+  +'<p class="small mute">The questions are written for this app in the style of the exam. They are not official exam questions, and the exam uses pictures for some parts where this test uses statements.</p>'}
 
 /* ---------- daily reminder as a calendar file ---------- */
 function makeReminder(){const t=($('#rt')&&$('#rt').value)||S.settings.remind||'07:30';S.settings.remind=t;save();const d=today().replace(/-/g,''),hm=t.replace(':','')+'00',url=location.origin+location.pathname;
@@ -415,7 +537,7 @@ function vListen(){const n=S.settings.ln||LESSONS[0].n;const opts=LESSONS.map(L=
 /* ---------- updates: nothing changes until the user taps Update ---------- */
 let NEWV=null,updHidden=false;
 async function checkUpdate(manual){const info=$('#uinfo');try{const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;const v=await r.json();if(v.version&&v.version!==APP_VERSION){NEWV=v;updHidden=false;showUpd();if(info)info.textContent='Version '+v.version+' is available.'}else if(manual&&info)info.textContent='You have the latest version.'}catch(e){if(manual&&info)info.textContent='Could not check. You seem to be offline.'}}
-function showUpd(){const el=$('#upd');if(!el)return;if(!NEWV||updHidden||R||F||A){el.style.display='none';return}const bk=S.lastBackup===today();
+function showUpd(){const el=$('#upd');if(!el)return;if(!NEWV||updHidden||R||F||A||T){el.style.display='none';return}const bk=S.lastBackup===today();
   el.innerHTML='<div class="in"><b>Update available: version '+esc(NEWV.version)+'</b><p class="small" style="margin:4px 0">'+esc(NEWV.notes||'')+'</p><p class="small mute" style="margin:4px 0 8px">Your progress stays on this phone. Save a backup file first, just in case.</p><div class="row wrap"><button class="grow" onclick="exportP();showUpd()">'+(bk?'✓ Backup saved':'1 · Save backup')+'</button><button class="primary grow" onclick="doUpdate()">2 · Update now</button><button class="ghost" onclick="updHidden=true;showUpd()">Later</button></div></div>';el.style.display='block'}
 async function doUpdate(){if(S.lastBackup!==today()&&!confirm('Update without saving a backup first?'))return;const el=$('#upd');if(el)el.innerHTML='<div class="in">Updating…</div>';
   try{const reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration();const sw=reg&&reg.active;if(sw){await new Promise(res=>{const ch=new MessageChannel();ch.port1.onmessage=res;sw.postMessage({type:'update'},[ch.port2]);setTimeout(res,15000)})}}catch(e){}
@@ -427,22 +549,23 @@ function go(h){location.hash=h}
 const TABS=[['#/','家','Home'],['#/listen','听','Listen'],['#/vocab','词','Words'],['#/grammar','文','Grammar'],['#/progress','进','Progress'],['#/settings','设','Settings']];
 function render(){const h=location.hash||'#/';const m=$('#main');
   if(h==='#/run'&&R){$('#nav').style.display='none';showUpd();showQ();return}
+  if(h==='#/exam'&&T){$('#nav').style.display='none';showUpd();showT();return}
   if(h==='#/play'&&A){$('#nav').style.display='none';showUpd();drawA(true);return}
   if(h==='#/flash'&&F){$('#nav').style.display='none';showUpd();showF();return}
   if(h==='#/done')return;
   $('#nav').style.display=S.name?'flex':'none';
   let v;const lm=h.match(/^#\/lesson\/(\d+)/);
-  if(lm)v=vLesson(+lm[1]);else if(h==='#/listen')v=vListen();else if(h==='#/vocab')v=vVocab();else if(h==='#/grammar')v=vGrammar();else if(h==='#/progress')v=vProgress();else if(h==='#/settings')v=vSettings();else v=vHome();
-  m.innerHTML=v;const cur=lm?'#/':(TABS.find(t=>t[0]===h)?h:'#/');
+  const sm=h.match(/^#\/story\/(\w+)/);if(lm)v=vLesson(+lm[1]);else if(sm)v=vStory(sm[1]);else if(h==='#/stories')v=vStories();else if(h==='#/numbers')v=vNumbers();else if(h==='#/chars')v=vChars();else if(h==='#/test')v=vTest();else if(h==='#/listen')v=vListen();else if(h==='#/vocab')v=vVocab();else if(h==='#/grammar')v=vGrammar();else if(h==='#/progress')v=vProgress();else if(h==='#/settings')v=vSettings();else v=vHome();
+  m.innerHTML=v;const cur=TABS.find(t=>t[0]===h)?h:'#/';
   showUpd();$('#nav').innerHTML=TABS.map(t=>'<a href="'+t[0]+'" class="'+(t[0]===cur?'on':'')+'"><b class="zh">'+t[1]+'</b>'+t[2]+'</a>').join('');window.scrollTo(0,0)}
-window.addEventListener('hashchange',()=>{if((location.hash==='#/run'&&R)||(location.hash==='#/flash'&&F)||(location.hash==='#/play'&&A))return;if(location.hash!=='#/play'&&A)stopA(true);if(location.hash!=='#/run')R=null;if(location.hash!=='#/flash'&&location.hash!=='#/done')F=null;render()});
+window.addEventListener('hashchange',()=>{if((location.hash==='#/run'&&R)||(location.hash==='#/flash'&&F)||(location.hash==='#/play'&&A)||(location.hash==='#/exam'&&T))return;if(location.hash!=='#/exam'&&T)endT(true);if(location.hash!=='#/play'&&A)stopA(true);if(location.hash!=='#/run')R=null;if(location.hash!=='#/flash'&&location.hash!=='#/done')F=null;render()});
 
 /* ---------- start ---------- */
 load();
 if(S.lastVersion!==APP_VERSION){S.lastVersion=APP_VERSION;const n=new Date();S.updatedAt=today()+' '+String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');save()}
 (async()=>{ // if the main copy is missing but the second copy exists, restore it
   if(!localStorage.getItem(KEY)){const b=await idbGet('kv','progress');if(b){try{S=migrate(JSON.parse(b));save()}catch(e){}}}
-  if(location.hash==='#/run'||location.hash==='#/flash'||location.hash==='#/done'||location.hash==='#/play')location.hash='#/';
+  if(location.hash==='#/run'||location.hash==='#/flash'||location.hash==='#/done'||location.hash==='#/play'||location.hash==='#/exam')location.hash='#/';
   render();checkUpdate();
 })();
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){try{navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}}
