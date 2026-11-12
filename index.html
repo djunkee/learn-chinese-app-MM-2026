@@ -87,6 +87,7 @@ svg.map{width:100%;height:auto;display:block}svg.map text{font-family:inherit}sv
 .rad{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}.rad:first-child{border-top:0}.rad .r{flex:none;width:52px;height:52px;border-radius:10px;background:var(--soft);display:grid;place-items:center;font-size:1.9rem}
 .chs span{display:inline-block;font-size:1.5rem;margin-right:6px;cursor:pointer}
 .av{flex:none;border-radius:50%;display:block}
+#ans button{touch-action:none;user-select:none;-webkit-user-select:none}#ans button.drag{opacity:.9;box-shadow:0 6px 16px rgba(0,0,0,.25);position:relative;z-index:3}#ans button.insl{box-shadow:-4px 0 0 var(--red)}#ans button.insr{box-shadow:4px 0 0 var(--red)}
 </style>
 </head>
 <body>
@@ -101,6 +102,7 @@ svg.map{width:100%;height:auto;display:block}svg.map text{font-family:inherit}sv
 const KEY='jiayou-progress';           // do not rename: progress lives under this key
 // Release history, newest first. The first entry is the running version; keep version.json in step.
 const RELEASES=[
+ {v:'1.5.1',d:'2026-11-12 23:50',n:['Build the sentence: drag the words in your answer to change their order; a tap still sends a word back']},
  {v:'1.5.0',d:'2026-11-12 23:30',n:['New character set for both learners: Andrei and Moritz each have ten illustrated figures in the same style','Your own figure reacts to your answers, whoever is practising','Figures on matching pages: cycling, running, travelling, food, AI and classroom lessons, stories and the Listen tab']},
  {v:'1.4.1',d:'2026-11-12 23:00',n:['Moritz now appears as illustrated figures with ten expressions: waving on the start screen, thinking when you ask for help, thumbs up or puzzled after an answer, cheering at the end of a good session, and as a speaker in the dialogues']},
  {v:'1.4.0',d:'2026-11-12 22:30',n:['New every day: a word or a Chinese saying of the day at the top of the home screen','HSK 2 section: eight themed lessons with the 123 HSK 2 words the app did not have yet and the new grammar','Stories and dialogues with questions, 14 to start with','Number, time, price and date drills','Characters: 26 building blocks and a recognition quiz','Mock test in exam style: a 15-question mini test and a full 60-question test with timer and score out of 200','My mistakes: redo what you got wrong','Cartoon figures of Moritz and Andrei on the start screen, the home screen and in the dialogues']},
@@ -231,8 +233,13 @@ function showQ(){
   window.scrollTo(0,0);
 }
 function drawTiles(){const q=R.qs[R.i];const t=k=>'<span class="tok"><span class="p">'+esc(q.toks[k].p)+'</span><span class="h zh">'+esc(q.toks[k].z)+'</span></span>';
-  $('#ans').innerHTML=q.picked.map((k,i)=>'<button onclick="unpick('+i+')">'+t(k)+'</button>').join('')||'<span class="mute small">Tap the words in the right order</span>';
+  $('#ans').innerHTML=q.picked.map((k,i)=>'<button data-i="'+i+'" onpointerdown="dragStart(event,'+i+')">'+t(k)+'</button>').join('')||'<span class="mute small">Tap the words in the right order. Drag a word to move it, tap it to send it back.</span>';
   $('#bank').innerHTML=q.order.filter(k=>!q.picked.includes(k)).map(k=>'<button onclick="pickTile('+k+')">'+t(k)+'</button>').join('')}
+let DR=null;
+function dragTarget(x,y,el){const tiles=[...document.querySelectorAll('#ans button')].filter(b=>b!==el);let idx=tiles.length;for(let j=0;j<tiles.length;j++){const r=tiles[j].getBoundingClientRect();if(y<r.top-4||(y<=r.bottom+4&&x<r.left+r.width/2)){idx=j;break}}return {tiles,idx}}
+function dragStart(e,i){const q=R&&R.qs[R.i];if(!q||q.done)return;const el=e.currentTarget;DR={i,el,x:e.clientX,y:e.clientY,moved:false};try{el.setPointerCapture(e.pointerId)}catch(err){}
+  el.onpointermove=ev=>{if(!DR)return;const dx=ev.clientX-DR.x,dy=ev.clientY-DR.y;if(!DR.moved&&Math.hypot(dx,dy)<8)return;DR.moved=true;el.classList.add('drag');el.style.transform='translate('+dx+'px,'+dy+'px)';const t=dragTarget(ev.clientX,ev.clientY,el);t.tiles.forEach(b=>b.classList.remove('insl','insr'));if(t.tiles.length){if(t.idx<t.tiles.length)t.tiles[t.idx].classList.add('insl');else t.tiles[t.tiles.length-1].classList.add('insr')}DR.to=t.idx};
+  el.onpointerup=el.onpointercancel=ev=>{if(!DR)return;const d=DR;DR=null;el.onpointermove=el.onpointerup=el.onpointercancel=null;if(!d.moved||ev.type==='pointercancel'){if(!d.moved)unpick(d.i);else drawTiles();return}const k=q.picked.splice(d.i,1)[0];q.picked.splice(Math.min(d.to===undefined?d.i:d.to,q.picked.length),0,k);drawTiles()}}
 function pickTile(k){const q=R.qs[R.i];if(q.done)return;q.picked.push(k);speak(q.toks[k].z);drawTiles()}
 function unpick(i){const q=R.qs[R.i];if(q.done)return;q.picked.splice(i,1);drawTiles()}
 function checkBuild(){const q=R.qs[R.i];if(q.done)return;if(q.picked.length<q.toks.length){$('#fb').innerHTML='<p class="mute small">Use all the words first.</p>';return}
