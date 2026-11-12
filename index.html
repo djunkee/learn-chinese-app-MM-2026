@@ -102,6 +102,7 @@ svg.map{width:100%;height:auto;display:block}svg.map text{font-family:inherit}sv
 const KEY='jiayou-progress';           // do not rename: progress lives under this key
 // Release history, newest first. The first entry is the running version; keep version.json in step.
 const RELEASES=[
+ {v:'1.5.3',d:'2026-11-13 00:20',n:['Home screen has one daily box: the word or saying of the day, with the motivational line underneath']},
  {v:'1.5.2',d:'2026-11-13 00:10',n:['Home screen shows your whole waving figure instead of a round head','After a right answer your training partner reacts, with several different figures in rotation; after a wrong one you think it over or your partner explains','End of session: your partner gives the thumbs up and you get your reward']},
  {v:'1.5.1',d:'2026-11-12 23:50',n:['Build the sentence: drag the words in your answer to change their order; a tap still sends a word back']},
  {v:'1.5.0',d:'2026-11-12 23:30',n:['New character set for both learners: Andrei and Moritz each have ten illustrated figures in the same style','Your own figure reacts to your answers, whoever is practising','Figures on matching pages: cycling, running, travelling, food, AI and classroom lessons, stories and the Listen tab']},
@@ -293,7 +294,6 @@ function vHome(){
   const d=S.days[today()],st=streak();
   let h='<div class="hero">'+(meKey()&&fig(meKey(),'wave',96)||'<img src="icon.svg" alt="">')+'<div><h1><span class="zh">你好</span> <span class="small mute" style="font-weight:400">nǐ hǎo</span>, '+esc(S.name)+'</h1><div class="mute small">'+(d?('Today: '+d.q+' questions, '+Math.max(1,Math.round(d.sec/60))+' min'):'Nothing practised yet today')+' · streak '+st+' day'+(st===1?'':'s')+'</div></div></div>';
   h+=dailyHtml();
-  h+='<div class="cheer">'+cheer()+'</div>';
   h+='<h2>Today\'s mixed practice</h2><p class="mute small">All lessons together. Words you find hard come up more often. Pick how long you have:</p>'+sessButtons('all');
   h+=extrasHtml();
   BOOKS.forEach(B=>{const open=(S.settings.open||{})[B.id];const isOpen=open===undefined?true:open;const avg=Math.round(B.lessons.reduce((a,L)=>a+mastery(L),0)/B.lessons.length*100);
@@ -373,7 +373,8 @@ function dailyHtml(){const t=dailyItem(),dt=new Date();const lab=dt.toLocaleDate
   let h='<div class="daily"><div class="row"><span class="tag">'+t.kind+'</span><span class="small mute grow" style="text-align:right">'+lab+'</span></div><div class="row" style="margin-top:8px"><div class="grow"><div class="zh" style="font-size:'+(t.z.length>8?'1.5':'2.1')+'rem;line-height:1.3">'+esc(t.z)+'</div><div><b>'+esc(t.p)+'</b></div></div>'+spk(t.z,1)+'</div>';
   if(t.lit)h+='<p class="small mute" style="margin:6px 0 0">Word for word: '+esc(t.lit)+'</p><p style="margin:4px 0 0">'+esc(t.e)+'</p>';
   else{h+='<p style="margin:6px 0 0">'+esc(t.e)+' <button class="link small" onclick="go(\'#/lesson/'+t.n+'\')">'+esc(t.from)+'</button></p>';if(t.ex)h+='<div style="margin-top:8px" onclick="speak(\''+t.ex.text+'\')">'+toksHtml(t.ex.toks)+'<div class="small mute">'+esc(t.ex.e)+'</div></div>'}
-  return h+'</div>'}
+  const me=S.name||'You',bud=S.buddy||'your training partner',c=CHEERS[dayNum(today())%CHEERS.length];
+  return h+'<p class="small mute" style="margin:10px 0 0;border-top:1px solid var(--line);padding-top:8px">'+esc(c.t.replace(/\{me\}/g,me).replace(/\{buddy\}/g,bud))+'</p></div>'}
 
 /* ---------- extras on the home screen ---------- */
 function mistakeIds(){const t=dayNum(today());const all=Object.keys(S.items).filter(id=>{const it=S.items[id];return it.w>0&&it.b<=2});const week=all.filter(id=>S.items[id].lw&&t-S.items[id].lw<=7);return week.length>=4?week:all}
