@@ -102,6 +102,7 @@ svg.map{width:100%;height:auto;display:block}svg.map text{font-family:inherit}sv
 const KEY='jiayou-progress';           // do not rename: progress lives under this key
 // Release history, newest first. The first entry is the running version; keep version.json in step.
 const RELEASES=[
+ {v:'1.6.2',d:'2026-11-13 14:10',n:['Slow audio (the turtle) now really is slower: sentences are spoken word by word with short pauses, which also works on phones whose voice ignores the speed setting']},
  {v:'1.6.1',d:'2026-11-13 12:30',n:['Forty more figures of Andrei and Moritz: each reaction now has several versions, with new ones for padel, coffee, Korean food, Japan, China and Singapore']},
  {v:'1.6.0',d:'2026-11-13 12:00',n:['Special days: on holidays in China, France, Germany and Singapore, on Chinese festivals and on your two birthdays, the daily box shows a matching phrase','New special topic: Chinese New Year, with the wishes people say','New dialogue: getting to know Andrei','Progress page lists the next special days']},
  {v:'1.5.3',d:'2026-11-13 00:20',n:['Home screen has one daily box: the word or saying of the day, with the motivational line underneath']},
@@ -172,7 +173,15 @@ function wordHtml(z,p,big){return '<span class="'+(big?'big':'')+'"><span class=
 let voice=null;
 function pickVoice(){if(!('speechSynthesis' in window))return;const v=speechSynthesis.getVoices();voice=v.find(x=>/zh[-_]CN/i.test(x.lang))||v.find(x=>/^zh/i.test(x.lang))||null}
 if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
-function speak(text,slow,queue){if(!text||!('speechSynthesis' in window))return;try{if(!queue)speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text.replace(/[\s_]/g,''));u.lang='zh-CN';if(voice)u.voice=voice;u.rate=slow?0.55:(S.settings.rate||0.8);speechSynthesis.speak(u)}catch(e){}}
+let SPK=0,WSET=null;
+const GLUE='的了吗呢吧着得地过们啊';
+// split a sentence into words using the app's own vocabulary, so slow speech can pause between them
+function chunks(text){text=String(text).replace(/[\s_]/g,'');if(!WSET){WSET=new Set(Object.keys(DICT).concat(Object.keys(GL)));}const out=[];let i=0;while(i<text.length){const c=text[i];if(/[，。？！、,.!?：:；;…—\-]/.test(c)){i++;out.push(null);continue}let L=Math.min(6,text.length-i),w=c;for(;L>1;L--){const t=text.substr(i,L);if(WSET.has(t)){w=t;break}}if(w.length===1&&GLUE.includes(w)&&out.length&&out[out.length-1])out[out.length-1]+=w;else out.push(w);i+=w.length}return out.filter(Boolean)}
+function mkU(t,rate){const u=new SpeechSynthesisUtterance(t);u.lang='zh-CN';if(voice)u.voice=voice;u.rate=rate;return u}
+function slowSay(text,my,alive,done){const cs=chunks(text);let i=0;const next=()=>{if(!alive()){return}if(i>=cs.length){if(done)done();return}const t=cs[i++];let fired=false;const go=()=>{if(fired)return;fired=true;setTimeout(next,cs.length>1?280:0)};try{const u=mkU(t,0.6);u.onend=go;u.onerror=go;speechSynthesis.speak(u)}catch(e){go()}setTimeout(go,1800+t.length*700)};next()}
+function speak(text,slow,queue){if(!text||!('speechSynthesis' in window))return;try{if(!queue){SPK++;speechSynthesis.cancel()}
+  if(slow){const my=SPK;slowSay(text,my,()=>my===SPK);return}
+  speechSynthesis.speak(mkU(String(text).replace(/[\s_]/g,''),S.settings.rate||0.8))}catch(e){}}
 const spk=(t,extra)=>'<button class="spk" aria-label="Listen" onclick="event.stopPropagation();speak(\''+t.replace(/'/g,'')+'\')">🔊</button>'+(extra?'<button class="spk" aria-label="Listen slowly" onclick="event.stopPropagation();speak(\''+t.replace(/'/g,'')+'\',1)">🐢</button>':'');
 
 /* ---------- spaced repetition ---------- */
@@ -511,7 +520,7 @@ async function startA(mode,n,queue,qname){if(!('speechSynthesis' in window)){ale
   A={mode,n:+n,steps:buildA(mode,+n),i:0,run:0,paused:false,t0:Date.now(),items:0,cont:S.settings.cont!==false,back:location.hash,queue:queue||null,qi:0,qname:qname||''};
   try{if(navigator.wakeLock)wake=await navigator.wakeLock.request('screen')}catch(e){}
   location.hash='#/play';render();runA()}
-function sayP(st,my){return new Promise(res=>{let done=false;const fin=()=>{if(!done){done=true;res()}};try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(st.lang==='zh'?st.say.replace(/[\s_]/g,''):st.say);if(st.lang==='zh'){u.lang='zh-CN';if(voice)u.voice=voice;u.rate=st.slow?0.55:(S.settings.rate||0.8)}else{u.lang=enVoice?enVoice.lang:'en-GB';if(enVoice)u.voice=enVoice;u.rate=0.95}u.onend=fin;u.onerror=fin;speechSynthesis.speak(u)}catch(e){fin()}setTimeout(fin,st.lang==='zh'?(3500+st.say.length*(st.slow?900:600)):(3500+st.say.length*130))})}
+function sayP(st,my){return new Promise(res=>{let done=false;const fin=()=>{if(!done){done=true;res()}};if(st.lang==='zh'&&st.slow){try{speechSynthesis.cancel()}catch(e){}slowSay(st.say,my,()=>!!A&&A.run===my,fin);setTimeout(fin,6000+st.say.length*1600);return}try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(st.lang==='zh'?st.say.replace(/[\s_]/g,''):st.say);if(st.lang==='zh'){u.lang='zh-CN';if(voice)u.voice=voice;u.rate=st.slow?0.55:(S.settings.rate||0.8)}else{u.lang=enVoice?enVoice.lang:'en-GB';if(enVoice)u.voice=enVoice;u.rate=0.95}u.onend=fin;u.onerror=fin;speechSynthesis.speak(u)}catch(e){fin()}setTimeout(fin,st.lang==='zh'?(3500+st.say.length*(st.slow?900:600)):(3500+st.say.length*130))})}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 async function runA(){const my=++A.run;while(A&&A.run===my&&A.i<A.steps.length){const st=A.steps[A.i];if(st.head)A.items++;drawA();if(st.pause)await sleep(st.pause);else await sayP(st,my);if(!A||A.run!==my)return;A.i++}
   if(!A||A.run!==my)return;if(A.queue){A.qi++;if(A.qi<A.queue.length){A.mode=A.queue[A.qi].m;A.n=A.queue[A.qi].n;A.steps=buildA(A.mode,A.n);A.i=0;runA()}else stopA();return}
